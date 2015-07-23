@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<addon addon_id="SV_TrendingContentTags" title="Tending Content Tags" version_string="1.0.0" version_id="10000" url="" install_callback_class="SV_TrendingContentTags" install_callback_method="install" uninstall_callback_class="SV_TrendingContentTags" uninstall_callback_method="uninstall">
+  <admin_navigation/>
+  <admin_permissions/>
+  <admin_style_properties/>
+  <admin_templates/>
+  <admin_template_modifications/>
+  <code_events/>
+  <code_event_listeners>
+    <listener event_id="load_class" execute_order="10" callback_class="SV_TrendingContentTags_Listener" callback_method="load_class" active="1" hint="XenForo_ControllerPublic_Forum" description="XenForo_ControllerPublic_Forum"/>
+    <listener event_id="load_class" execute_order="10" callback_class="SV_TrendingContentTags_Listener" callback_method="load_class" active="1" hint="XenForo_Model_Tag" description="XenForo_Model_Tag"/>
+  </code_event_listeners>
+  <cron/>
+  <email_templates/>
+  <email_template_modifications/>
+  <optiongroups/>
+  <permissions>
+    <permission_groups/>
+    <permissions/>
+    <interface_groups/>
+  </permissions>
+  <phrases>
+    <phrase title="sv_trendingcontenttag_cloud" version_id="10000" version_string="1.0.0"><![CDATA[Trending Tag Cloud]]></phrase>
+  </phrases>
+  <route_prefixes/>
+  <style_properties/>
+  <templates>
+    <template title="sv_trendingcontenttag_sidebar" version_id="10000" version_string="1.0.0"><![CDATA[
+<!-- block: sidebar_trending_tags -->
+<xen:if hascontent="true">
+	<xen:require css="tinhte_xentag.css" />
+	<div class="section trendingTags">
+		<div class="secondaryContent">
+			<h3><a href="{xen:link tags}">{xen:phrase sv_trendingcontenttag_cloud}</a></h3>
+			<ul class="Tinhte_XenTag_TagCloud trending">
+				<xen:contentcheck>
+					<xen:foreach loop="$tags" value="$tag">
+						<li class="Tinhte_XenTag_TagCloudTag Tinhte_XenTag_TagCloud_Level{$tag.cloudLevel}">
+							<a href="{xen:link tags, $tag}"
+								{xen:if '{$tag.tag_title}', 'title="{$tag.tag_title}" class="Tooltip"'}>
+								{$tag.tag_text}
+							</a>
+						</li>
+					</xen:foreach>
+				</xen:contentcheck>
+			</ul>
+		</div>			
+	</div>
+</xen:if>
+<!-- end block: sidebar_trending_tags -->
+]]></template>
+  </templates>
+  <public_template_modifications>
+    <modification template="forum_list" modification_key="sv_xentag_forum_list" description="Inject Trending Content Tags Sidebar Item" execution_order="10" enabled="1" action="str_replace">
+      <find><![CDATA[<!-- end block: forum_stats -->]]></find>
+      <replace><![CDATA[$0
+<xen:include template="sv_trendingcontenttag_sidebar" />]]></replace>
+    </modification>
+  </public_template_modifications>
+  <bb_code_media_sites/>
+  <bb_codes/>
+</addon>
