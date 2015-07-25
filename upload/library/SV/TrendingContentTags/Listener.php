@@ -21,12 +21,12 @@ class SV_TrendingContentTags_Listener
                 CREATE TABLE IF NOT EXISTS xf_tag_sv_trending (
                     `tag_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
                     `stats_date` int(10) unsigned NOT NULL DEFAULT '0',
-                    `view_count` int(10) unsigned NOT NULL DEFAULT '0',
+                    `activity_count` int(10) unsigned NOT NULL DEFAULT '0',
                     PRIMARY KEY (`tag_id`,`view_date`)
                 ) ENGINE = InnoDB
             ");
 
-            SV_TrendingTags_Install::addColumn("xf_tag", "sv_view_count", "INT UNSIGNED NOT NULL DEFAULT 0");
+            SV_TrendingContentTags_Install::addColumn("xf_tag", "sv_activity_count", "INT UNSIGNED NOT NULL DEFAULT 0");
         }
     }
 
@@ -38,7 +38,7 @@ class SV_TrendingContentTags_Listener
             DROP TABLE IF EXISTS `xf_tag_sv_trending`
         ");
 
-        SV_TrendingContentTags_Install::dropColumn("xf_tag", "sv_view_count");
+        SV_TrendingContentTags_Install::dropColumn("xf_tag", "sv_activity_count");
 
         return true;
     }

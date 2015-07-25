@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<addon addon_id="SV_TrendingContentTags" title="Tending Content Tags" version_string="1.0.0" version_id="10000" url="" install_callback_class="SV_TrendingContentTags" install_callback_method="install" uninstall_callback_class="SV_TrendingContentTags" uninstall_callback_method="uninstall">
+<addon addon_id="SV_TrendingContentTags" title="Trending Content Tags" version_string="1.0.0" version_id="10000" url="" install_callback_class="SV_TrendingContentTags_Listener" install_callback_method="install" uninstall_callback_class="SV_TrendingContentTags_Listener" uninstall_callback_method="uninstall">
   <admin_navigation/>
   <admin_permissions/>
   <admin_style_properties/>
@@ -7,44 +7,70 @@
   <admin_template_modifications/>
   <code_events/>
   <code_event_listeners>
-    <listener event_id="load_class" execute_order="10" callback_class="SV_TrendingContentTags_Listener" callback_method="load_class" active="1" hint="XenForo_ControllerPublic_Forum" description="XenForo_ControllerPublic_Forum"/>
-    <listener event_id="load_class" execute_order="10" callback_class="SV_TrendingContentTags_Listener" callback_method="load_class" active="1" hint="XenForo_Model_Tag" description="XenForo_Model_Tag"/>
+    <listener event_id="load_class" execute_order="15" callback_class="SV_TrendingContentTags_Listener" callback_method="load_class" active="1" hint="XenForo_ControllerPublic_Forum" description="XenForo_ControllerPublic_Forum"/>    
+    <listener event_id="load_class" execute_order="15" callback_class="SV_TrendingContentTags_Listener" callback_method="load_class" active="1" hint="XenForo_Model_Tag" description="XenForo_Model_Tag"/>
+    <listener event_id="load_class" execute_order="15" callback_class="SV_TrendingContentTags_Listener" callback_method="load_class" active="1" hint="XenForo_ControllerHelper_ForumThreadPost" description="XenForo_ControllerHelper_ForumThreadPost"/>
+    <listener event_id="load_class" execute_order="15" callback_class="SV_TrendingContentTags_Listener" callback_method="load_class" active="1" hint="XenForo_Model_Thread" description="XenForo_Model_Thread"/>
+    <listener event_id="load_class" execute_order="15" callback_class="SV_TrendingContentTags_Listener" callback_method="load_class" active="1" hint="XenForo_Model_Like" description="XenForo_Model_Like"/>
+    <listener event_id="load_class" execute_order="15" callback_class="SV_TrendingContentTags_Listener" callback_method="load_class" active="1" hint="Dark_PostRating_Model" description="Dark_PostRating_Model"/>
+    <listener event_id="load_class" execute_order="15" callback_class="SV_TrendingContentTags_Listener" callback_method="load_class" active="1" hint="XenForo_DataWriter_DiscussionMessage_Post" description="XenForo_DataWriter_DiscussionMessage_Post"/>
   </code_event_listeners>
   <cron/>
   <email_templates/>
   <email_template_modifications/>
-  <optiongroups/>
+  <optiongroups>
+    <option option_id="sv_tagTrending" edit_format="onofftextbox" data_type="array" can_backup="1">
+      <default_value>a:2:{s:7:"enabled";s:1:"1";s:5:"count";s:3:"20";}</default_value>
+      <edit_format_params>onoff=enabled
+value=count
+type=spinbox
+min=1
+default=20</edit_format_params>
+      <sub_options>enabled
+count</sub_options>
+      <relation group_id="tagging" display_order="300"/>
+    </option>
+    <option option_id="sv_tagTrendingMinActivity" edit_format="spinbox" data_type="positive_integer" can_backup="1">
+      <default_value>1</default_value>
+      <edit_format_params>min=1</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="tagging" display_order="310"/>
+    </option>
+  </optiongroups>
   <permissions>
     <permission_groups/>
     <permissions/>
     <interface_groups/>
   </permissions>
   <phrases>
+    <phrase title="option_sv_tagTrending" version_id="10000" version_string="1.0.0"><![CDATA[Enable tag trending with up to X tags:]]></phrase>
+    <phrase title="option_sv_tagTrendingMinActivity" version_id="10000" version_string="1.0.0"><![CDATA[Minimum Trending Tag Cloud Activity]]></phrase>
+    <phrase title="option_sv_tagTrendingMinActivity_explain" version_id="10000" version_string="1.0.0"><![CDATA[Tags will not be shown in the tag cloud unless they have bene this active in the last hour.]]></phrase>
+    <phrase title="option_sv_tagTrending_explain" version_id="10000" version_string="1.0.0"><![CDATA[If enabled, a trending tag cloud showing the most active tags will be shown on the forum list.]]></phrase>
+    <phrase title="sv_tag_uses" version_id="10000" version_string="1.0.0"><![CDATA[Content count tagged: {uses}]]></phrase>
     <phrase title="sv_trendingcontenttag_cloud" version_id="10000" version_string="1.0.0"><![CDATA[Trending Tag Cloud]]></phrase>
   </phrases>
   <route_prefixes/>
   <style_properties/>
   <templates>
-    <template title="sv_trendingcontenttag_sidebar" version_id="10000" version_string="1.0.0"><![CDATA[
-<!-- block: sidebar_trending_tags -->
+    <template title="sv_trendingcontenttag_sidebar" version_id="10000" version_string="1.0.0"><![CDATA[<!-- block: sidebar_trending_tags -->
 <xen:if hascontent="true">
-	<xen:require css="tinhte_xentag.css" />
 	<div class="section trendingTags">
 		<div class="secondaryContent">
 			<h3><a href="{xen:link tags}">{xen:phrase sv_trendingcontenttag_cloud}</a></h3>
-			<ul class="Tinhte_XenTag_TagCloud trending">
+			<ul class="TagCloud trending">
 				<xen:contentcheck>
 					<xen:foreach loop="$tags" value="$tag">
-						<li class="Tinhte_XenTag_TagCloudTag Tinhte_XenTag_TagCloud_Level{$tag.cloudLevel}">
+						<li class="TagCloud trending Tag">
 							<a href="{xen:link tags, $tag}"
-								{xen:if '{$tag.tag_title}', 'title="{$tag.tag_title}" class="Tooltip"'}>
-								{$tag.tag_text}
+							{xen:if '{$tag.tag}', 'title="{xen:phrase sv_tag_uses, 'uses={$tag.use_count}'}" class="Tooltip"'}>
+								{$tag.tag}
 							</a>
 						</li>
 					</xen:foreach>
 				</xen:contentcheck>
 			</ul>
-		</div>			
+		</div>
 	</div>
 </xen:if>
 <!-- end block: sidebar_trending_tags -->

@@ -7,10 +7,11 @@ class SV_TrendingContentTags_XenForo_ControllerPublic_Forum extends XFCP_SV_Tren
         $response = parent::actionIndex();
         if ($response instanceof XenForo_ControllerResponse_View)
         {
-            if (XenForo_Application::getOptions()->tagTrending['enabled'])
+            $options = XenForo_Application::getOptions();
+            if ($options->sv_tagTrending['enabled'])
             {
                 $tagModel = $this->_getTagModel();
-                $tagCloud = $tagModel->getTrendingTagCloud(XenForo_Application::getOptions()->tagTrending['count'], XenForo_Application::getOptions()->tagTrendingMinViews);
+                $tagCloud = $tagModel->getTrendingTagCloud($options->sv_tagTrending['count'], $options->sv_tagTrendingMinActivity);
                 //$tagCloudLevels = $tagModel->getTagCloudLevels($tagCloud);
             }
             else
@@ -18,15 +19,11 @@ class SV_TrendingContentTags_XenForo_ControllerPublic_Forum extends XFCP_SV_Tren
                 $tagCloud = array();
                 //$tagCloudLevels = array();
             }
-            $response->params['tagCloud'] = $tagCloud;
-            //$response->params['tagCloudLevels'] = $tagCloud;
+            $response->params['tags'] = $tagCloud;
         }
         return $response;
     }
 
-    /**
-     * @return  XenForo_Model_Tag
-     */
     protected function _getTagModel()
     {
         return $this->getModelFromCache('XenForo_Model_Tag');
