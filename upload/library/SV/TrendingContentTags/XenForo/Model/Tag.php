@@ -39,7 +39,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         foreach($tags as $tag)
         {
             $this->_getDb()->query('
-                insert into xf_tag_sv_trending (tag_id, stats_date, activity_count)
+                insert into xf_sv_tag_trending (tag_id, stats_date, activity_count)
                 values (?, ?, 1)
                 on duplicate key update
                     activity_count = activity_count + 1
@@ -48,7 +48,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
     }
 
 
-    public function getTrendingTagCloud($limit, $minActivity = 1, $time_window = 3600)
+    public function getTrendingTagCloud($limit, $minActivity = 1, $time_window = 43200)
     {
         $limitstring = '';
         $limit = intval($limit);
@@ -62,7 +62,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
             FROM
             (
                 SELECT tag_id, sum(activity_count) AS total_activity_count
-                FROM xf_tag_sv_trending
+                FROM xf_sv_tag_trending
                 WHERE stats_date >= ?
                 GROUP by tag_id
                 HAVING total_activity_count >= ?
