@@ -32,7 +32,7 @@ count</sub_options>
       <relation group_id="tagging" display_order="100300"/>
     </option>
     <option option_id="sv_tagTrendingMinActivity" edit_format="spinbox" data_type="positive_integer" can_backup="1">
-      <default_value>1</default_value>
+      <default_value>5</default_value>
       <edit_format_params>min=1</edit_format_params>
       <sub_options></sub_options>
       <relation group_id="tagging" display_order="100310"/>

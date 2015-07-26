@@ -10,7 +10,7 @@ class SV_TrendingContentTags_XenForo_Model_Like extends XFCP_SV_TrendingContentT
             $this->_getTagModel()->incrementTagActivity($contentType, $contentId, SV_TrendingContentTags_Globals::ACTIVITY_TYPE_LIKE);
             SV_TrendingContentTags_Globals::$LoggedTagActivity = true;
         }
-        return ($latestLikeUsers);
+        return $latestLikeUsers;
     }
 
     protected function _getTagModel()
