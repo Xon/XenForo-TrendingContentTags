@@ -38,6 +38,18 @@ count</sub_options>
       <sub_options></sub_options>
       <relation group_id="tagging" display_order="100310"/>
     </option>
+    <option option_id="sv_tagTrendingWindow" edit_format="spinbox" data_type="positive_integer" can_backup="1">
+      <default_value>360</default_value>
+      <edit_format_params></edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="tagging" display_order="100340"/>
+    </option>
+    <option option_id="sv_tagTrending_sampleInterval" edit_format="spinbox" data_type="positive_integer" can_backup="1">
+      <default_value>30</default_value>
+      <edit_format_params></edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="tagging" display_order="100350"/>
+    </option>
     <option option_id="sv_tagTrending_tracking" edit_format="checkbox" data_type="array" can_backup="1">
       <default_value>a:4:{s:11:"view_member";b:1;s:4:"like";b:1;s:5:"reply";b:1;s:5:"watch";b:1;}</default_value>
       <edit_format_params>view_guest=View Content by Guest
@@ -62,7 +74,11 @@ watch</sub_options>
     <phrase title="option_sv_tagTrending" version_id="10000" version_string="1.0.0"><![CDATA[Enable tag trending with up to X tags:]]></phrase>
     <phrase title="option_sv_tagTrendingMinActivity" version_id="10000" version_string="1.0.0"><![CDATA[Minimum Trending Tag Cloud Activity]]></phrase>
     <phrase title="option_sv_tagTrendingMinActivity_explain" version_id="10000" version_string="1.0.0"><![CDATA[Tags will not be shown in the tag cloud unless they have bene this active in the last hour.]]></phrase>
+    <phrase title="option_sv_tagTrendingWindow" version_id="10000" version_string="1.0.0"><![CDATA[Trending Window]]></phrase>
+    <phrase title="option_sv_tagTrendingWindow_explain" version_id="10000" version_string="1.0.0"><![CDATA[The window in minutes to compute trending tags.]]></phrase>
     <phrase title="option_sv_tagTrending_explain" version_id="10000" version_string="1.0.0"><![CDATA[If enabled, a trending tag cloud showing the most active tags will be shown on the forum list.]]></phrase>
+    <phrase title="option_sv_tagTrending_sampleInterval" version_id="10000" version_string="1.0.0"><![CDATA[Sample interval]]></phrase>
+    <phrase title="option_sv_tagTrending_sampleInterval_explain" version_id="10000" version_string="1.0.0"><![CDATA[The number of minutes between samples.]]></phrase>
     <phrase title="option_sv_tagTrending_tracking" version_id="10000" version_string="1.0.0"><![CDATA[Increment activity on]]></phrase>
     <phrase title="option_sv_tagTrending_tracking_explain" version_id="10000" version_string="1.0.0"><![CDATA[Increment trending activity counter based on the above actions]]></phrase>
     <phrase title="sv_tag_uses" version_id="10000" version_string="1.0.0"><![CDATA[Content count tagged: {uses}]]></phrase>
@@ -73,13 +89,14 @@ watch</sub_options>
   <templates>
     <template title="sv_trendingcontenttag_sidebar" version_id="10000" version_string="1.0.0"><![CDATA[<!-- block: sidebar_trending_tags -->
 <xen:if hascontent="true">
+	<xen:require css="sv_trending_tags.css" />
 	<div class="section trendingTags">
-		<div class="secondaryContent">
+		<div class="tagCloud secondaryContent">
 			<h3><a href="{xen:link tags}">{xen:phrase sv_trendingcontenttag_cloud}</a></h3>
-			<ul class="TagCloud trending">
+			<ul class="tagCloud trending">
 				<xen:contentcheck>
 					<xen:foreach loop="$tags" value="$tag">
-						<li class="TagCloud trending Tag">
+						<li class="tagCloud trending tag">
 							<a href="{xen:link tags, $tag}"
 							{xen:if '{$tag.tag}', 'title="{xen:phrase sv_tag_uses, 'uses={$tag.use_count}'}" class="Tooltip"'}>
 								{$tag.tag}
@@ -93,6 +110,25 @@ watch</sub_options>
 </xen:if>
 <!-- end block: sidebar_trending_tags -->
 ]]></template>
+    <template title="sv_trending_tags.css" version_id="10000" version_string="1.0.0"><![CDATA[.tagCloud {
+}
+
+.tagCloud .trending {
+}
+
+{xen:helper clearfix, '.trending'}
+
+.tagCloud .trending .tag {
+	display: inline;
+	float: left;
+}
+
+
+.tagCloud .trending .tag a {
+	display: block;
+	white-space: nowrap;
+	margin: 0.5em;
+}]]></template>
   </templates>
   <public_template_modifications>
     <modification template="forum_list" modification_key="sv_xentag_forum_list" description="Inject Trending Content Tags Sidebar Item" execution_order="10" enabled="1" action="str_replace">

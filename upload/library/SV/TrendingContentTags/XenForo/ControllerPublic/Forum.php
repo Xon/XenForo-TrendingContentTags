@@ -11,7 +11,7 @@ class SV_TrendingContentTags_XenForo_ControllerPublic_Forum extends XFCP_SV_Tren
             if ($options->sv_tagTrending['enabled'])
             {
                 $tagModel = $this->_getTagModel();
-                $tagCloud = $tagModel->getTrendingTagCloud($options->sv_tagTrending['count'], $options->sv_tagTrendingMinActivity);
+                $tagCloud = $tagModel->getTrendingTagCloud($options->sv_tagTrending['count'], $options->sv_tagTrendingMinActivity, $options->sv_tagTrendingWindow * 60);
                 //$tagCloudLevels = $tagModel->getTagCloudLevels($tagCloud);
             }
             else

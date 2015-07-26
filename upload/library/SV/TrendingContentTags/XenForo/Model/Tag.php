@@ -2,10 +2,18 @@
 
 class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTags_XenForo_Model_Tag
 {
+    protected $sv_tagTrending_tracking = null;
+    protected $sv_tagTrending_sampleInterval = null;
+
     public function incrementTagActivity($contentType, $contentId, $activity_type)
     {
-        $tracking = XenForo_Application::getOptions()->sv_tagTrending_tracking;
-        $supported_activity_type = !empty($tracking[$activity_type]);
+        if (empty($this->sv_tagTrending_tracking))
+        {
+            $options = XenForo_Application::getOptions();
+            $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
+            $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
+        }
+        $supported_activity_type = !empty($this->sv_tagTrending_tracking[$activity_type]);
         //$scaling_factor = 1.0;
 
         switch($contentType)
@@ -20,22 +28,26 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
                 }
                 else
                 {
-                    $contentType = '';
+                    $supported_activity_type = false;
                 }
                 break;
             default:
-                $contentType = '';
+                $supported_activity_type = false;
                 break;
         }
 
-        if (!$supported_activity_type && empty($contentType))
+        if (!$supported_activity_type)
         {
             return false;
         }
 
         $tags = $this->getTagsForContent($contentType, $contentId);
-        // nearest 15 minutes
-        $time = XenForo_Application::$time - (XenForo_Application::$time % 900);
+        if (empty($tags))
+        {
+            return false;
+        }
+
+        $time = XenForo_Application::$time - (XenForo_Application::$time % $this->sv_tagTrending_sampleInterval);
         foreach($tags as $tag)
         {
             $this->_getDb()->query('
@@ -45,10 +57,12 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
                     activity_count = activity_count + 1
             ', array($tag['tag_id'], $time));
         }
+
+        return true;
     }
 
 
-    public function getTrendingTagCloud($limit, $minActivity = 1, $time_window = 43200)
+    public function getTrendingTagCloud($limit, $minActivity, $sample_window)
     {
         $limitstring = '';
         $limit = intval($limit);
@@ -70,6 +84,6 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
                 " . $limitstring . "
             ) a
             join xf_tag on xf_tag.tag_id =  a.tag_id
-        ", 'tag_id', array(XenForo_Application::$time - $time_window, $minActivity));
+        ", 'tag_id', array(XenForo_Application::$time - $sample_window, $minActivity));
     }
 }
