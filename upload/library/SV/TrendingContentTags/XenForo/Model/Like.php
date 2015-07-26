@@ -7,7 +7,7 @@ class SV_TrendingContentTags_XenForo_Model_Like extends XFCP_SV_TrendingContentT
         $latestLikeUsers = parent::likeContent($contentType, $contentId, $contentUserId, $likeUserId, $likeDate);
         if ($latestLikeUsers && !SV_TrendingContentTags_Globals::$LoggedTagActivity)
         {
-            $this->_getTagModel()->incrementTagActivity($contentType, $contentId);
+            $this->_getTagModel()->incrementTagActivity($contentType, $contentId, SV_TrendingContentTags_Globals::ACTIVITY_TYPE_LIKE);
             SV_TrendingContentTags_Globals::$LoggedTagActivity = true;
         }
         return ($latestLikeUsers);

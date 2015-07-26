@@ -6,7 +6,7 @@ class SV_TrendingContentTags_XenForo_DataWriter_DiscussionMessage_Post extends X
     {
         if ($this->isInsert())
         {
-            $this->_getTagModel()->incrementTagActivity('thread', $this->get('thread_id'));
+            $this->_getTagModel()->incrementTagActivity('thread', $this->get('thread_id'), SV_TrendingContentTags_Globals::ACTIVITY_TYPE_REPLY);
             SV_TrendingContentTags_Globals::$LoggedTagActivity = true;
         }
         return parent::_postSaveAfterTransaction();

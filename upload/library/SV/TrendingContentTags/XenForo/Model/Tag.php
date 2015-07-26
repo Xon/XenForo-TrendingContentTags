@@ -2,8 +2,12 @@
 
 class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTags_XenForo_Model_Tag
 {
-    public function incrementTagActivity($contentType, $contentId)
+    public function incrementTagActivity($contentType, $contentId, $activity_type)
     {
+        $tracking = XenForo_Application::getOptions()->sv_tagTrending_tracking;
+        $supported_activity_type = !empty($tracking[$activity_type]);
+        //$scaling_factor = 1.0;
+
         switch($contentType)
         {
             case 'thread':
@@ -24,7 +28,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
                 break;
         }
 
-        if (empty($contentType))
+        if (!$supported_activity_type && empty($contentType))
         {
             return false;
         }

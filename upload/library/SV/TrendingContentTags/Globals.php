@@ -7,5 +7,11 @@ class SV_TrendingContentTags_Globals
     public static $LoggedTagActivity = false;
     public static $postToThreads = array();
 
+    const ACTIVITY_TYPE_LIKE = 'like';
+    const ACTIVITY_TYPE_VIEW_GUEST = 'view_guest';
+    const ACTIVITY_TYPE_VIEW_MEMBER = 'view_member';
+    const ACTIVITY_TYPE_REPLY = 'reply';
+    const ACTIVITY_TYPE_WATCH = 'watch';
+
     private function __construct() {}
 }
