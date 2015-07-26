@@ -63,7 +63,7 @@ watch</sub_options>
     <phrase title="option_sv_tagTrendingMinActivity" version_id="10000" version_string="1.0.0"><![CDATA[Minimum Trending Tag Cloud Activity]]></phrase>
     <phrase title="option_sv_tagTrendingMinActivity_explain" version_id="10000" version_string="1.0.0"><![CDATA[Tags will not be shown in the tag cloud unless they have bene this active in the last hour.]]></phrase>
     <phrase title="option_sv_tagTrending_explain" version_id="10000" version_string="1.0.0"><![CDATA[If enabled, a trending tag cloud showing the most active tags will be shown on the forum list.]]></phrase>
-    <phrase title="option_sv_tagTrending_tracking" version_id="10000" version_string="1.0.0"><![CDATA[Increments activity on]]></phrase>
+    <phrase title="option_sv_tagTrending_tracking" version_id="10000" version_string="1.0.0"><![CDATA[Increment activity on]]></phrase>
     <phrase title="option_sv_tagTrending_tracking_explain" version_id="10000" version_string="1.0.0"><![CDATA[Increment trending activity counter based on the above actions]]></phrase>
     <phrase title="sv_tag_uses" version_id="10000" version_string="1.0.0"><![CDATA[Content count tagged: {uses}]]></phrase>
     <phrase title="sv_trendingcontenttag_cloud" version_id="10000" version_string="1.0.0"><![CDATA[Trending Tag Cloud]]></phrase>
