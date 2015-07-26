@@ -61,6 +61,9 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         return true;
     }
 
+    protected $cacheObject = null;
+    const sv_trendingTag_cacheId = 'tags_trending';
+    protected $trendingTagProbes = 5;
 
     public function getTrendingTagCloud($limit, $minActivity, $sample_window)
     {
@@ -71,19 +74,64 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
             $limitstring = "LIMIT " . $limit;
         }
 
-        return $this->fetchAllKeyed("
-            SELECT xf_tag.*, a.total_activity_count
-            FROM
-            (
-                SELECT tag_id, sum(activity_count) AS total_activity_count
-                FROM xf_sv_tag_trending
-                WHERE stats_date >= ?
-                GROUP by tag_id
-                HAVING total_activity_count >= ?
-                ORDER BY total_activity_count DESC
-                " . $limitstring . "
-            ) a
-            join xf_tag on xf_tag.tag_id =  a.tag_id
-        ", 'tag_id', array(XenForo_Application::$time - $sample_window, $minActivity));
+		if ($this->cacheObject === null)
+		{
+			$this->cacheObject = XenForo_Application::getCache();
+		}
+		if ($this->cacheObject)
+		{
+            if (empty($this->sv_tagTrending_tracking))
+            {
+                $options = XenForo_Application::getOptions();
+                $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
+                $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
+            }
+            $expiry = $this->sv_tagTrending_sampleInterval > 120 ? 120 : intval($this->sv_tagTrending_sampleInterval);
+
+            $raw = $this->cacheObject->load(self::sv_trendingTag_cacheId, true);
+            $trendingTags = @unserialize($raw);
+        }
+
+        if (empty($trendingTags))
+        {
+            $trendingTags = $this->fetchAllKeyed("
+                SELECT xf_tag.*, a.total_activity_count
+                FROM
+                (
+                    SELECT tag_id, sum(activity_count) AS total_activity_count
+                    FROM xf_sv_tag_trending
+                    WHERE stats_date >= ?
+                    GROUP by tag_id
+                    HAVING total_activity_count >= ?
+                    ORDER BY total_activity_count DESC
+                    " . $limitstring . "
+                ) a
+                join xf_tag on xf_tag.tag_id =  a.tag_id
+            ", 'tag_id', array(XenForo_Application::$time - $sample_window, $minActivity));
+
+            if (empty($trendingTags) && $this->trendingTagProbes > 0)
+            {
+                $this->trendingTagProbes -= 1;
+                // probe for more stuff
+                if ($sample_window < 3600)
+                {
+                    $sample_window = 3600;
+                }
+                else
+                {
+                    $sample_window = $sample_window * 2;
+                }
+                return $this->getTrendingTagCloud($limit, $minActivity, $sample_window);
+            }
+
+        }
+
+        if ($this->cacheObject && !empty($expiry))
+        {
+            $raw = serialize($trendingTags);
+            $this->cacheObject->save($raw, self::sv_trendingTag_cacheId, array(), $expiry);
+        }
+
+        return $trendingTags;
     }
 }
