@@ -22,7 +22,7 @@
   <email_template_modifications/>
   <optiongroups>
     <option option_id="sv_tagTrending" edit_format="onofftextbox" data_type="array" can_backup="1">
-      <default_value>a:2:{s:7:"enabled";s:1:"1";s:5:"count";s:3:"20";}</default_value>
+      <default_value>a:2:{s:7:"enabled";s:1:"1";s:5:"count";s:2:"20";}</default_value>
       <edit_format_params>onoff=enabled
 value=count
 type=spinbox
@@ -89,46 +89,28 @@ watch</sub_options>
   <templates>
     <template title="sv_trendingcontenttag_sidebar" version_id="10000" version_string="1.0.0"><![CDATA[<!-- block: sidebar_trending_tags -->
 <xen:if hascontent="true">
-	<xen:require css="sv_trending_tags.css" />
-	<div class="section trendingTags">
-		<div class="tagCloud secondaryContent">
-			<h3><a href="{xen:link tags}">{xen:phrase sv_trendingcontenttag_cloud}</a></h3>
-			<ul class="tagCloud trending">
-				<xen:contentcheck>
-					<xen:foreach loop="$tags" value="$tag">
-						<li class="tagCloud trending tag">
-							<a href="{xen:link tags, $tag}"
-							{xen:if '{$tag.tag}', 'title="{xen:phrase sv_tag_uses, 'uses={$tag.use_count}'}" class="Tooltip"'}>
-								{$tag.tag}
-							</a>
-						</li>
-					</xen:foreach>
-				</xen:contentcheck>
-			</ul>
-		</div>
-	</div>
+    <xen:require css="tag.css" />
+    <div class="section trendingTags">
+        <div class="secondaryContent">
+            <h3><a href="{xen:link tags}">{xen:phrase sv_trendingcontenttag_cloud}</a></h3>
+            <ul class="tagCloud">
+                <xen:contentcheck>
+                    <xen:foreach loop="$tagCloud" key="$tagId" value="$tag">
+                        <li>
+                            <a href="{xen:link tags, $tag}"
+                               {xen:if '{$tag.tag}', 'title="{xen:phrase sv_tag_uses, 'uses={$tag.use_count}'}" class="Tooltip', 'class="Tooltip'}
+                               tagCloudTag tagCloudTag{$tagCloudLevels.{$tagId}}">
+                                {$tag.tag}
+                            </a>
+                        </li>
+                    </xen:foreach>
+                </xen:contentcheck>
+            </ul>
+        </div>
+    </div>
 </xen:if>
 <!-- end block: sidebar_trending_tags -->
 ]]></template>
-    <template title="sv_trending_tags.css" version_id="10000" version_string="1.0.0"><![CDATA[.tagCloud {
-}
-
-.tagCloud .trending {
-}
-
-{xen:helper clearfix, '.trending'}
-
-.tagCloud .trending .tag {
-	display: inline;
-	float: left;
-}
-
-
-.tagCloud .trending .tag a {
-	display: block;
-	white-space: nowrap;
-	margin: 0.5em;
-}]]></template>
   </templates>
   <public_template_modifications>
     <modification template="forum_list" modification_key="sv_trendingcontenttag_forum_list" description="Inject Trending Content Tags Sidebar Item" execution_order="4442" enabled="1" action="str_replace">

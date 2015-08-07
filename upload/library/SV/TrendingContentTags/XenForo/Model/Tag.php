@@ -67,19 +67,12 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
 
     public function getTrendingTagCloud($limit, $minActivity, $sample_window)
     {
-        $limitstring = '';
-        $limit = intval($limit);
-        if ($limit > 0)
+        if ($this->cacheObject === null)
         {
-            $limitstring = "LIMIT " . $limit;
+            $this->cacheObject = XenForo_Application::getCache();
         }
-
-		if ($this->cacheObject === null)
-		{
-			$this->cacheObject = XenForo_Application::getCache();
-		}
-		if ($this->cacheObject)
-		{
+        if ($this->cacheObject)
+        {
             if (empty($this->sv_tagTrending_tracking))
             {
                 $options = XenForo_Application::getOptions();
@@ -94,16 +87,23 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
 
         if (empty($trendingTags))
         {
+            $limitstring = '';
+            $limit = intval($limit);
+            if ($limit > 0)
+            {
+                $limitstring = "LIMIT " . $limit;
+            }
+
             $trendingTags = $this->fetchAllKeyed("
-                SELECT xf_tag.*, a.total_activity_count
+                SELECT xf_tag.*, a._activity_count AS activity_count
                 FROM
                 (
-                    SELECT tag_id, sum(activity_count) AS total_activity_count
+                    SELECT tag_id, sum(activity_count) AS _activity_count
                     FROM xf_sv_tag_trending
                     WHERE stats_date >= ?
                     GROUP by tag_id
-                    HAVING total_activity_count >= ?
-                    ORDER BY total_activity_count DESC
+                    HAVING _activity_count >= ?
+                    ORDER BY _activity_count DESC
                     " . $limitstring . "
                 ) a
                 join xf_tag on xf_tag.tag_id =  a.tag_id
@@ -133,5 +133,47 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         }
 
         return $trendingTags;
+    }
+
+    public function getTrendingTagCloudLevels(array $tags, $levels = 7)
+    {
+        if (!$tags)
+        {
+            return array();
+        }
+
+        $uses = XenForo_Application::arrayColumn($tags, 'activity_count');
+        $min = min($uses);
+        $max = max($uses);
+        $levelSize = ($max - $min) / $levels;
+
+        $output = array();
+
+        if ($min == $max)
+        {
+            $middle = ceil($levels / 2);
+            foreach ($tags AS $id => $tag)
+            {
+                $output[$id] = $middle;
+            }
+        }
+        else
+        {
+            foreach ($tags AS $id => $tag)
+            {
+                $diffFromMin = $tag['activity_count'] - $min;
+                if (!$diffFromMin)
+                {
+                    $level = 1;
+                }
+                else
+                {
+                    $level = ceil($diffFromMin / $levelSize);
+                }
+                $output[$id] = $level;
+            }
+        }
+
+        return $output;
     }
 }

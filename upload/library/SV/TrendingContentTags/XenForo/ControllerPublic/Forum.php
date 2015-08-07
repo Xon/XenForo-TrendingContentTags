@@ -12,14 +12,15 @@ class SV_TrendingContentTags_XenForo_ControllerPublic_Forum extends XFCP_SV_Tren
             {
                 $tagModel = $this->_getTagModel();
                 $tagCloud = $tagModel->getTrendingTagCloud($options->sv_tagTrending['count'], $options->sv_tagTrendingMinActivity, $options->sv_tagTrendingWindow * 60);
-                //$tagCloudLevels = $tagModel->getTagCloudLevels($tagCloud);
+                $tagCloudLevels = $tagModel->getTrendingTagCloudLevels($tagCloud);
             }
             else
             {
                 $tagCloud = array();
-                //$tagCloudLevels = array();
+                $tagCloudLevels = array();
             }
-            $response->params['tags'] = $tagCloud;
+            $response->params['tagCloud'] = $tagCloud;
+            $response->params['tagCloudLevels'] = $tagCloudLevels;
         }
         return $response;
     }
