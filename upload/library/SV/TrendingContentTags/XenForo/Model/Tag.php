@@ -107,6 +107,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
                     " . $limitstring . "
                 ) a
                 join xf_tag on xf_tag.tag_id =  a.tag_id
+                ORDER BY tag
             ", 'tag_id', array(XenForo_Application::$time - $sample_window, $minActivity));
 
             if (empty($trendingTags) && $this->trendingTagProbes > 0)
