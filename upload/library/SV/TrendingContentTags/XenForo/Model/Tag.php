@@ -63,9 +63,8 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
 
     protected $cacheObject = null;
     const sv_trendingTag_cacheId = 'tags_trending';
-    protected $trendingTagProbes = 5;
 
-    public function getTrendingTagCloud($limit, $minActivity, $sample_window)
+    public function getTrendingTagCloud($limit, $minActivity, $sample_window, $trendingTagProbes = 5)
     {
         if ($this->cacheObject === null)
         {
@@ -79,52 +78,57 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
                 $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
                 $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
             }
-            $expiry = $this->sv_tagTrending_sampleInterval > 120 ? 120 : intval($this->sv_tagTrending_sampleInterval);
+            $expiry = $this->sv_tagTrending_sampleInterval < 120 ? 120 : intval($this->sv_tagTrending_sampleInterval);
 
             $raw = $this->cacheObject->load(self::sv_trendingTag_cacheId, true);
             $trendingTags = @unserialize($raw);
+            if (!empty($trendingTags))
+            {
+                return $trendingTags;
+            }
         }
 
-        if (empty($trendingTags))
+        $limitstring = '';
+        $limit = intval($limit);
+        if ($limit > 0)
         {
-            $limitstring = '';
-            $limit = intval($limit);
-            if ($limit > 0)
+            $limitstring = "LIMIT " . $limit;
+        }
+
+        $trendingTags = $this->fetchAllKeyed("
+            SELECT xf_tag.*, a._activity_count AS activity_count
+            FROM
+            (
+                SELECT tag_id, sum(activity_count) AS _activity_count
+                FROM xf_sv_tag_trending
+                WHERE stats_date >= ?
+                GROUP by tag_id
+                HAVING _activity_count >= ?
+                ORDER BY _activity_count DESC
+                " . $limitstring . "
+            ) a
+            join xf_tag on xf_tag.tag_id =  a.tag_id
+            ORDER BY tag
+        ", 'tag_id', array(XenForo_Application::$time - $sample_window, $minActivity));
+
+        if (empty($trendingTags) && $trendingTagProbes > 0)
+        {
+            $trendingTagProbes -= 1;
+            // probe for more stuff
+            if ($sample_window < 3600)
             {
-                $limitstring = "LIMIT " . $limit;
+                $sample_window = 3600;
+            }
+            else
+            {
+                $sample_window = $sample_window * 2;
             }
 
-            $trendingTags = $this->fetchAllKeyed("
-                SELECT xf_tag.*, a._activity_count AS activity_count
-                FROM
-                (
-                    SELECT tag_id, sum(activity_count) AS _activity_count
-                    FROM xf_sv_tag_trending
-                    WHERE stats_date >= ?
-                    GROUP by tag_id
-                    HAVING _activity_count >= ?
-                    ORDER BY _activity_count DESC
-                    " . $limitstring . "
-                ) a
-                join xf_tag on xf_tag.tag_id =  a.tag_id
-                ORDER BY tag
-            ", 'tag_id', array(XenForo_Application::$time - $sample_window, $minActivity));
-
-            if (empty($trendingTags) && $this->trendingTagProbes > 0)
+            $trendingTags = $this->getTrendingTagCloud($limit, $minActivity, $sample_window, $trendingTagProbes);
+            if (!empty($trendingTagProbes))
             {
-                $this->trendingTagProbes -= 1;
-                // probe for more stuff
-                if ($sample_window < 3600)
-                {
-                    $sample_window = 3600;
-                }
-                else
-                {
-                    $sample_window = $sample_window * 2;
-                }
-                return $this->getTrendingTagCloud($limit, $minActivity, $sample_window);
+                return $trendingTags;
             }
-
         }
 
         if ($this->cacheObject && !empty($expiry))
