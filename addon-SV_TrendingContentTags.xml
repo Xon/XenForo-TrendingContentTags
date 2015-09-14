@@ -39,7 +39,7 @@ count</sub_options>
       <relation group_id="tagging" display_order="100310"/>
     </option>
     <option option_id="sv_tagTrendingMinCount" edit_format="spinbox" data_type="positive_integer" can_backup="1">
-      <default_value>5</default_value>
+      <default_value>2</default_value>
       <edit_format_params>min=1</edit_format_params>
       <sub_options></sub_options>
       <relation group_id="tagging" display_order="100315"/>
@@ -81,7 +81,7 @@ watch</sub_options>
     <phrase title="option_sv_tagTrendingMinActivity" version_id="10000" version_string="1.0.0"><![CDATA[Minimum Trending Tag Cloud Activity]]></phrase>
     <phrase title="option_sv_tagTrendingMinActivity_explain" version_id="10000" version_string="1.0.0"><![CDATA[Tags will not be shown in the trending tag cloud unless they have been this active in the trending window.]]></phrase>
     <phrase title="option_sv_tagTrendingMinCount" version_id="00005" version_string="0.0.5"><![CDATA[Minimum Trending Tag Cloud Count]]></phrase>
-    <phrase title="option_sv_tagTrendingMinCount_explain" version_id="00005" version_string="0.0.5"><![CDATA[Tags will not be shown in the trending tag cloud unless they have been used this many times.]]></phrase>
+    <phrase title="option_sv_tagTrendingMinCount_explain" version_id="00005" version_string="0.0.5"><![CDATA[Tags will not be shown in the trending tag cloud unless they have been used at least this many times.]]></phrase>
     <phrase title="option_sv_tagTrendingWindow" version_id="10000" version_string="1.0.0"><![CDATA[Trending Window]]></phrase>
     <phrase title="option_sv_tagTrendingWindow_explain" version_id="10000" version_string="1.0.0"><![CDATA[The window in minutes to compute trending tags.]]></phrase>
     <phrase title="option_sv_tagTrending_explain" version_id="10000" version_string="1.0.0"><![CDATA[If enabled, a trending tag cloud showing the most active tags will be shown on the forum list.]]></phrase>
