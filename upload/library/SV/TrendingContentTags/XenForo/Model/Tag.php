@@ -64,7 +64,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
     protected $cacheObject = null;
     const sv_trendingTag_cacheId = 'tags_trending';
 
-    public function getTrendingTagCloud($limit, $minActivity, $sample_window, $trendingTagProbes = 5)
+    public function getTrendingTagCloud($limit, $minActivity, $minCount, $sample_window, $trendingTagProbes = 5)
     {
         if ($this->cacheObject === null)
         {
@@ -108,8 +108,9 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
                 " . $limitstring . "
             ) a
             join xf_tag on xf_tag.tag_id =  a.tag_id
+            WHERE xf_tag.use_count >= ?
             ORDER BY tag
-        ", 'tag_id', array(XenForo_Application::$time - $sample_window, $minActivity));
+        ", 'tag_id', array(XenForo_Application::$time - $sample_window, $minActivity, $minCount));
 
         if (empty($trendingTags) && $trendingTagProbes > 0)
         {
@@ -124,7 +125,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
                 $sample_window = $sample_window * 2;
             }
 
-            $trendingTags = $this->getTrendingTagCloud($limit, $minActivity, $sample_window, $trendingTagProbes);
+            $trendingTags = $this->getTrendingTagCloud($limit, $minActivity, $minCount, $sample_window, $trendingTagProbes);
             if (!empty($trendingTagProbes))
             {
                 return $trendingTags;
