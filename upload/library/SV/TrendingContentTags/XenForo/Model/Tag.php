@@ -174,7 +174,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
                 }
                 else
                 {
-                    $level = ceil($diffFromMin / $levelSize);
+                    $level = min($levels, ceil($diffFromMin / $levelSize));
                 }
                 $output[$id] = $level;
             }
