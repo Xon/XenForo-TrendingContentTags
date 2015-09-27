@@ -182,4 +182,32 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
 
         return $output;
     }
+
+    public function mergeTags($sourceTagId, $targetTagId)
+    {
+        parent::mergeTags($sourceTagId, $targetTagId);
+
+        $db = $this->_getDb();
+
+        XenForo_Db::beginTransaction($db);
+
+        $db->query("
+            UPDATE xf_sv_tag_trending a, xf_sv_tag_trending b
+            SET a.activity_count = a.activity_count + b.activity_count
+            WHERE a.tag_id = ? and b.tag_id = ? and a.stats_date = b.stats_date
+        ", array($targetTagId, $sourceTagId));
+
+        $db->query("
+            UPDATE IGNORE xf_sv_tag_trending
+            SET tag_id = ?
+            WHERE tag_id = ?
+        ", array($targetTagId, $sourceTagId));
+
+        $db->query("
+            delete from xf_sv_tag_trending
+            WHERE tag_id = ?
+        ", array($sourceTagId));
+
+        XenForo_Db::commit($db);
+    }
 }
