@@ -209,5 +209,14 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         ", array($sourceTagId));
 
         XenForo_Db::commit($db);
+
+        if ($this->cacheObject === null)
+        {
+            $this->cacheObject = XenForo_Application::getCache();
+        }
+        if ($this->cacheObject)
+        {
+            $this->cacheObject->remove(self::sv_trendingTag_cacheId);
+        }
     }
 }
