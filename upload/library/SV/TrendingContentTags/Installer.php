@@ -25,8 +25,6 @@ class SV_TrendingContentTags_Installer
                 ) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
             ");
 
-            SV_Utils_Install::addColumn("xf_tag", "sv_activity_count", "INT UNSIGNED NOT NULL DEFAULT 0");
-
 /*
             $db->query("
                 insert into xf_sv_tag_trending (tag_id, stats_date, activity_count)
@@ -53,6 +51,7 @@ class SV_TrendingContentTags_Installer
             ");
 */
         }
+        SV_Utils_Install::dropColumn("xf_tag", "sv_activity_count");
     }
 
     public static function uninstall()

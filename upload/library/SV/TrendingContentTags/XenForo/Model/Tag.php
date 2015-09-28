@@ -62,7 +62,6 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
     }
 
     protected $cacheObject = null;
-    const sv_trendingTag_cacheId = 'tags_trending';
 
     public function getTrendingTagCloud($limit, $minActivity, $minCount, $sample_window, $trendingTagProbes = 5)
     {
@@ -80,7 +79,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
             }
             $expiry = $this->sv_tagTrending_sampleInterval < 120 ? 120 : intval($this->sv_tagTrending_sampleInterval);
 
-            $raw = $this->cacheObject->load(self::sv_trendingTag_cacheId, true);
+            $raw = $this->cacheObject->load(SV_TrendingContentTags_Globals::sv_trendingTag_cacheId, true);
             $trendingTags = @unserialize($raw);
             if (!empty($trendingTags))
             {
@@ -135,7 +134,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         if ($this->cacheObject && !empty($expiry))
         {
             $raw = serialize($trendingTags);
-            $this->cacheObject->save($raw, self::sv_trendingTag_cacheId, array(), $expiry);
+            $this->cacheObject->save($raw, SV_TrendingContentTags_Globals::sv_trendingTag_cacheId, array(), $expiry);
         }
 
         return $trendingTags;
@@ -216,7 +215,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         }
         if ($this->cacheObject)
         {
-            $this->cacheObject->remove(self::sv_trendingTag_cacheId);
+            $this->cacheObject->remove(SV_TrendingContentTags_Globals::sv_trendingTag_cacheId);
         }
     }
 }
