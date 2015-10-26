@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<addon addon_id="SV_TrendingContentTags" title="Trending Content Tags" version_string="0.0.7" version_id="00007" url="https://xenforo.com/community/resources/trending-content-tags.4442/" install_callback_class="SV_TrendingContentTags_Installer" install_callback_method="install" uninstall_callback_class="SV_TrendingContentTags_Installer" uninstall_callback_method="uninstall">
+<addon addon_id="SV_TrendingContentTags" title="Trending Content Tags" version_string="0.0.7" version_id="7" url="https://xenforo.com/community/resources/trending-content-tags.4442/" install_callback_class="SV_TrendingContentTags_Installer" install_callback_method="install" uninstall_callback_class="SV_TrendingContentTags_Installer" uninstall_callback_method="uninstall">
   <admin_navigation/>
   <admin_permissions/>
   <admin_style_properties/>
@@ -80,8 +80,8 @@ watch</sub_options>
     <phrase title="option_sv_tagTrending" version_id="10000" version_string="1.0.0"><![CDATA[Enable tag trending with up to X tags:]]></phrase>
     <phrase title="option_sv_tagTrendingMinActivity" version_id="10000" version_string="1.0.0"><![CDATA[Minimum Trending Tag Cloud Activity]]></phrase>
     <phrase title="option_sv_tagTrendingMinActivity_explain" version_id="10000" version_string="1.0.0"><![CDATA[Tags will not be shown in the trending tag cloud unless they have been this active in the trending window.]]></phrase>
-    <phrase title="option_sv_tagTrendingMinCount" version_id="00005" version_string="0.0.5"><![CDATA[Minimum Trending Tag Cloud Count]]></phrase>
-    <phrase title="option_sv_tagTrendingMinCount_explain" version_id="00005" version_string="0.0.5"><![CDATA[Tags will not be shown in the trending tag cloud unless they have been used at least this many times.]]></phrase>
+    <phrase title="option_sv_tagTrendingMinCount" version_id="5" version_string="0.0.5"><![CDATA[Minimum Trending Tag Cloud Count]]></phrase>
+    <phrase title="option_sv_tagTrendingMinCount_explain" version_id="5" version_string="0.0.5"><![CDATA[Tags will not be shown in the trending tag cloud unless they have been used at least this many times.]]></phrase>
     <phrase title="option_sv_tagTrendingWindow" version_id="10000" version_string="1.0.0"><![CDATA[Trending Window]]></phrase>
     <phrase title="option_sv_tagTrendingWindow_explain" version_id="10000" version_string="1.0.0"><![CDATA[The window in minutes to compute trending tags.]]></phrase>
     <phrase title="option_sv_tagTrending_explain" version_id="10000" version_string="1.0.0"><![CDATA[If enabled, a trending tag cloud showing the most active tags will be shown on the forum list.]]></phrase>
@@ -95,28 +95,25 @@ watch</sub_options>
   <route_prefixes/>
   <style_properties/>
   <templates>
-    <template title="sv_trendingcontenttag_sidebar" version_id="10000" version_string="1.0.0"><![CDATA[<!-- block: sidebar_trending_tags -->
-<xen:if hascontent="true">
-    <xen:require css="tag.css" />
-    <div class="section trendingTags">
-        <div class="secondaryContent">
-            <h3><a href="{xen:link tags}">{xen:phrase sv_trendingcontenttag_cloud}</a></h3>
-            <ul class="tagCloud">
-                <xen:contentcheck>
-                    <xen:foreach loop="$tagCloud" key="$tagId" value="$tag">
-                        <li>
-                            <a href="{xen:link tags, $tag}"
-                               {xen:if '{$tag.tag}', 'title="{xen:phrase sv_tag_uses, 'uses={$tag.use_count}'}" class="Tooltip', 'class="Tooltip'}
-                               tagCloudTag tagCloudTag{$tagCloudLevels.{$tagId}}">
-                                {$tag.tag}
-                            </a>
-                        </li>
-                    </xen:foreach>
-                </xen:contentcheck>
-            </ul>
-        </div>
-    </div>
-</xen:if>
+    <template title="sv_trendingcontenttag_sidebar" version_id="7" version_string="0.0.7"><![CDATA[<!-- block: sidebar_trending_tags -->
+<xen:require css="tag.css" />
+<div class="section trendingTags">
+<div class="secondaryContent">
+    <h3><a href="{xen:link tags}">{xen:phrase sv_trendingcontenttag_cloud}</a></h3>
+    <ul class="tagCloud">
+            <xen:foreach loop="$tagCloud" key="$tagId" value="$tag">
+                <li>
+                    <a href="{xen:link tags, $tag}"
+                       {xen:if '{$tag.tag}', 'title="{xen:phrase sv_tag_uses, 'uses={$tag.use_count}'}" class="Tooltip', 'class="Tooltip'}
+                       tagCloudTag tagCloudTag{$tagCloudLevels.{$tagId}}">
+                        {$tag.tag}
+                    </a>
+                </li>
+            </xen:foreach>
+    </ul>
+</div>
+</div>
+
 <!-- end block: sidebar_trending_tags -->
 ]]></template>
   </templates>
