@@ -74,7 +74,7 @@ count</sub_options>
       <sub_options></sub_options>
       <relation group_id="tagging" display_order="100350"/>
     </option>
-    <option option_id="sv_tagTrending_tracking" edit_format="callback" data_type="array" can_backup="1">
+    <option option_id="sv_tagTrending_tracking" edit_format="callback" data_type="array" can_backup="1" validation_class="SV_TrendingContentTags_Option_TagActivity" validation_method="verifyOption">
       <default_value>a:10:{s:10:"view_guest";b:0;s:12:"w_view_guest";d:0.001;s:11:"view_member";b:1;s:4:"like";b:1;s:5:"reply";b:1;s:5:"watch";b:1;s:13:"w_view_member";d:0.1;s:6:"w_like";d:0.5;s:7:"w_reply";i:1;s:7:"w_watch";i:1;}</default_value>
       <edit_format_params>SV_TrendingContentTags_Option_TagActivity::renderOption</edit_format_params>
       <sub_options>view_guest

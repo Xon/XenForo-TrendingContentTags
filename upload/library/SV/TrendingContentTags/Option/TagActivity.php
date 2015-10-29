@@ -45,20 +45,21 @@ class SV_TrendingContentTags_Option_TagActivity
             return true;
         }
 
-        $hasErrors = false;
-        foreach($option as $key => $value)
+        $noErrors = true;
+        foreach($option as $activity => $value)
         {
-            if (empty($value) || stripos($key, 'w_') !== 0)
+            if (empty($value) || stripos($activity, 'w_') !== 0)
             {
                 continue;
             }
             if (!is_numeric($value))
             {
-                $hasErrors = true;
+                $noErrors = false;
+                $activity = substr($activity,2);
                 $dw->error(new XenForo_Phrase('tag_activity_weight_not_numeric', array('activity' => new XenForo_Phrase('tag_activity_'.$activity)), $fieldName));
             }
         }
 
-        return !$hasErrors;
+        return $noErrors;
     }
 }
