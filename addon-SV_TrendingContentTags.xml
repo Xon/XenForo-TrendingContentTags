@@ -115,6 +115,7 @@ w_watch</sub_options>
     <phrase title="tag_activity_view_guest" version_id="8" version_string="0.0.8"><![CDATA[View Content by Guest]]></phrase>
     <phrase title="tag_activity_view_member" version_id="8" version_string="0.0.8"><![CDATA[View Content by Member]]></phrase>
     <phrase title="tag_activity_watch" version_id="8" version_string="0.0.8"><![CDATA[Watched Content]]></phrase>
+    <phrase title="tag_activity_weight_not_numeric" version_id="8" version_string="0.0.8"><![CDATA[{activity} weight must be numeric]]></phrase>
   </phrases>
   <route_prefixes/>
   <style_properties/>

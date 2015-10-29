@@ -15,7 +15,9 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         }
         $supported_activity_type = !empty($this->sv_tagTrending_tracking[$activity_type]);
         $w_activity_type = 'w_'.$activity_type;
-        $scaling_factor = isset($this->sv_tagTrending_tracking[$w_activity_type]) ? $this->sv_tagTrending_tracking[$w_activity_type] : 1;
+        $scaling_factor = isset($this->sv_tagTrending_tracking[$w_activity_type]) && is_numeric($this->sv_tagTrending_tracking[$w_activity_type]) 
+                          ? $this->sv_tagTrending_tracking[$w_activity_type] 
+                          : 1;
 
         switch($contentType)
         {
