@@ -14,7 +14,8 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
             $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
         }
         $supported_activity_type = !empty($this->sv_tagTrending_tracking[$activity_type]);
-        //$scaling_factor = 1.0;
+        $w_activity_type = 'w_'.$activity_type;
+        $scaling_factor = isset($this->sv_tagTrending_tracking[$w_activity_type]) ? $this->sv_tagTrending_tracking[$w_activity_type] : 1;
 
         switch($contentType)
         {
@@ -52,10 +53,10 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         {
             $this->_getDb()->query('
                 insert into xf_sv_tag_trending (tag_id, stats_date, activity_count)
-                values (?, ?, 1)
+                values (?, ?, ?)
                 on duplicate key update
-                    activity_count = activity_count + 1
-            ', array($tag['tag_id'], $time));
+                    activity_count = activity_count + values(activity_count)
+            ', array($tag['tag_id'], $time, $scaling_factor));
         }
 
         return true;

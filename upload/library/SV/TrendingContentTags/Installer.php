@@ -20,7 +20,7 @@ class SV_TrendingContentTags_Installer
                 CREATE TABLE IF NOT EXISTS xf_sv_tag_trending (
                     `tag_id` int(10) unsigned NOT NULL,
                     `stats_date` int(10) unsigned NOT NULL DEFAULT '0',
-                    `activity_count` int(10) unsigned NOT NULL DEFAULT '0',
+                    `activity_count` float NOT NULL DEFAULT '0',
                     PRIMARY KEY (`stats_date`,`tag_id`)
                 ) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
             ");
@@ -52,6 +52,7 @@ class SV_TrendingContentTags_Installer
 */
         }
         SV_Utils_Install::dropColumn("xf_tag", "sv_activity_count");
+        SV_Utils_Install::modifyColumn("xf_sv_tag_trending", "activity_count", 'int(10) unsigned', 'float');
     }
 
     public static function uninstall()

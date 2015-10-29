@@ -1,9 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<addon addon_id="SV_TrendingContentTags" title="Trending Content Tags" version_string="0.0.7" version_id="7" url="https://xenforo.com/community/resources/trending-content-tags.4442/" install_callback_class="SV_TrendingContentTags_Installer" install_callback_method="install" uninstall_callback_class="SV_TrendingContentTags_Installer" uninstall_callback_method="uninstall">
+<addon addon_id="SV_TrendingContentTags" title="Trending Content Tags" version_string="0.0.8" version_id="8" url="https://xenforo.com/community/resources/trending-content-tags.4442/" install_callback_class="SV_TrendingContentTags_Installer" install_callback_method="install" uninstall_callback_class="SV_TrendingContentTags_Installer" uninstall_callback_method="uninstall">
   <admin_navigation/>
   <admin_permissions/>
   <admin_style_properties/>
-  <admin_templates/>
+  <admin_templates>
+    <template title="option_tag_activity_select"><![CDATA[<xen:controlunit label="{$preparedOption.title}">
+<ul class="FieldChoices">
+<xen:foreach loop="$formatParams" value="$subOption">
+<li>
+<xen:checkbox label="">
+	<xen:option label="{$subOption.label}" name="{$subOption.name}" selected="{$subOption.selected}">
+		<xen:textbox name="{$subOption.name_w}" value="{$subOption.value}" placeholder="{$subOption.placeholder}" size="{$subOption.size}" maxlength="{$subOption.maxlength}"  inputclass="Elastic" />
+	</xen:option>
+</xen:checkbox>
+</li>
+</xen:foreach>
+</ul>
+<p class="explain">{xen:raw $preparedOption.explain}</p>
+<input type="hidden" name="{$listedFieldName}" value="{$preparedOption.option_id}" />
+{xen:raw $editLink}
+</xen:controlunit>
+]]></template>
+  </admin_templates>
   <admin_template_modifications/>
   <code_events/>
   <code_event_listeners>
@@ -56,18 +74,19 @@ count</sub_options>
       <sub_options></sub_options>
       <relation group_id="tagging" display_order="100350"/>
     </option>
-    <option option_id="sv_tagTrending_tracking" edit_format="checkbox" data_type="array" can_backup="1">
-      <default_value>a:4:{s:11:"view_member";b:1;s:4:"like";b:1;s:5:"reply";b:1;s:5:"watch";b:1;}</default_value>
-      <edit_format_params>view_guest=View Content by Guest
-view_member=View Content by Member
-like=Like Content
-reply=Reply to Content
-watch=Watched Content</edit_format_params>
+    <option option_id="sv_tagTrending_tracking" edit_format="callback" data_type="array" can_backup="1">
+      <default_value>a:10:{s:10:"view_guest";b:0;s:12:"w_view_guest";d:0.001;s:11:"view_member";b:1;s:4:"like";b:1;s:5:"reply";b:1;s:5:"watch";b:1;s:13:"w_view_member";d:0.1;s:6:"w_like";d:0.5;s:7:"w_reply";i:1;s:7:"w_watch";i:1;}</default_value>
+      <edit_format_params>SV_TrendingContentTags_Option_TagActivity::renderOption</edit_format_params>
       <sub_options>view_guest
+w_view_guest
 view_member
+w_view_member
 like
+w_like
 reply
-watch</sub_options>
+w_reply
+watch
+w_watch</sub_options>
       <relation group_id="tagging" display_order="100320"/>
     </option>
   </optiongroups>
@@ -91,6 +110,11 @@ watch</sub_options>
     <phrase title="option_sv_tagTrending_tracking_explain" version_id="10000" version_string="1.0.0"><![CDATA[Increment trending activity counter based on the above actions]]></phrase>
     <phrase title="sv_tag_uses" version_id="10000" version_string="1.0.0"><![CDATA[Content count tagged: {uses}]]></phrase>
     <phrase title="sv_trendingcontenttag_cloud" version_id="10000" version_string="1.0.0"><![CDATA[Trending Tag Cloud]]></phrase>
+    <phrase title="tag_activity_like" version_id="8" version_string="0.0.8"><![CDATA[Like Content]]></phrase>
+    <phrase title="tag_activity_reply" version_id="8" version_string="0.0.8"><![CDATA[Reply to Content]]></phrase>
+    <phrase title="tag_activity_view_guest" version_id="8" version_string="0.0.8"><![CDATA[View Content by Guest]]></phrase>
+    <phrase title="tag_activity_view_member" version_id="8" version_string="0.0.8"><![CDATA[View Content by Member]]></phrase>
+    <phrase title="tag_activity_watch" version_id="8" version_string="0.0.8"><![CDATA[Watched Content]]></phrase>
   </phrases>
   <route_prefixes/>
   <style_properties/>
