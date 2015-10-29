@@ -6,7 +6,7 @@ class SV_TrendingContentTags_Option_TagActivity
     {
         $activities = explode("\n", $preparedOption['sub_options']);
         $defaults = unserialize($preparedOption['default_value']);
-
+        $option_value = $preparedOption['option_value'];
         $options = array();
         foreach($activities as $activity)
         {
@@ -18,13 +18,13 @@ class SV_TrendingContentTags_Option_TagActivity
             $options[] = array(
                 'name' => htmlspecialchars($fieldPrefix . "[$preparedOption[option_id]][$activity]"),
                 'name_w' => htmlspecialchars($fieldPrefix . "[$preparedOption[option_id]][$activity_w]"),
-                'selected' => !empty($preparedOption['option_value'][$activity]),
+                'selected' => !empty($option_value[$activity]),
                 'label' => new XenForo_Phrase('tag_activity_'.$activity),
-                'value' => isset($preparedOption['option_value'][$activity_w])
-                           ? $preparedOption['option_value'][$activity_w]
-                           : isset($defaults[$activity_w])
+                'value' => isset($option_value[$activity_w])
+                           ? $option_value[$activity_w]
+                           : (isset($defaults[$activity_w])
                              ? $defaults[$activity_w]
-                             : '',
+                             : ''),
                 'placeholder' => 1,
                 'maxlength' => 5,
                 'size' => 5,
@@ -59,7 +59,8 @@ class SV_TrendingContentTags_Option_TagActivity
                 $dw->error(new XenForo_Phrase('tag_activity_weight_not_numeric', array('activity' => new XenForo_Phrase('tag_activity_'.$activity)), $fieldName));
             }
         }
-
+//var_export($option);
+//throw new Exception();
         return $noErrors;
     }
 }
