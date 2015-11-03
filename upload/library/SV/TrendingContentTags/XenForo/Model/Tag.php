@@ -15,8 +15,8 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         }
         $supported_activity_type = !empty($this->sv_tagTrending_tracking[$activity_type]);
         $w_activity_type = 'w_'.$activity_type;
-        $scaling_factor = isset($this->sv_tagTrending_tracking[$w_activity_type]) && is_numeric($this->sv_tagTrending_tracking[$w_activity_type]) 
-                          ? $this->sv_tagTrending_tracking[$w_activity_type] 
+        $scaling_factor = isset($this->sv_tagTrending_tracking[$w_activity_type]) && is_numeric($this->sv_tagTrending_tracking[$w_activity_type])
+                          ? $this->sv_tagTrending_tracking[$w_activity_type]
                           : 1;
 
         switch($contentType)
@@ -44,24 +44,17 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
             return false;
         }
 
-        $tags = $this->getTagsForContent($contentType, $contentId);
-        if (empty($tags))
-        {
-            return false;
-        }
-
         $time = XenForo_Application::$time - (XenForo_Application::$time % $this->sv_tagTrending_sampleInterval);
-        foreach($tags as $tag)
-        {
-            $this->_getDb()->query('
-                insert into xf_sv_tag_trending (tag_id, stats_date, activity_count)
-                values (?, ?, ?)
-                on duplicate key update
-                    activity_count = activity_count + values(activity_count)
-            ', array($tag['tag_id'], $time, $scaling_factor));
-        }
+        $rows = $this->_getDb()->query('
+INSERT INTO xf_sv_tag_trending (tag_id, stats_date, activity_count)
+    SELECT tag_id, ?, ?
+    FROM xf_tag_content AS tag_content
+    WHERE tag_content.content_type = ? AND tag_content.content_id = ?
+ON DUPLICATE KEY UPDATE
+    activity_count = activity_count + VALUES(activity_count)
+        ', array($time, $scaling_factor, $contentType, $contentId));
 
-        return true;
+        return !empty($rows) && $rows->rowCount() > 0;
     }
 
     protected $cacheObject = null;
