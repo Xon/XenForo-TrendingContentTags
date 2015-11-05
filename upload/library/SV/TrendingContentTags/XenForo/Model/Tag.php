@@ -27,7 +27,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
                 if (!empty(SV_TrendingContentTags_Globals::$postToThreads[$contentId]))
                 {
                     $contentType = 'thread';
-                    $threadId = SV_TrendingContentTags_Globals::$postToThreads[$contentId];
+                    $contentId = SV_TrendingContentTags_Globals::$postToThreads[$contentId];
                 }
                 else
                 {
