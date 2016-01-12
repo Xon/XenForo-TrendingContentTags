@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<addon addon_id="SV_TrendingContentTags" title="Trending Content Tags" version_string="0.0.10" version_id="10" url="https://xenforo.com/community/resources/trending-content-tags.4442/" install_callback_class="SV_TrendingContentTags_Installer" install_callback_method="install" uninstall_callback_class="SV_TrendingContentTags_Installer" uninstall_callback_method="uninstall">
+<addon addon_id="SV_TrendingContentTags" title="Trending Content Tags" version_string="0.0.11" version_id="11" url="https://xenforo.com/community/resources/trending-content-tags.4442/" install_callback_class="SV_TrendingContentTags_Installer" install_callback_method="install" uninstall_callback_class="SV_TrendingContentTags_Installer" uninstall_callback_method="uninstall">
   <admin_navigation/>
   <admin_permissions/>
   <admin_style_properties/>
@@ -120,12 +120,13 @@ w_watch</sub_options>
   <route_prefixes/>
   <style_properties/>
   <templates>
-    <template title="sv_trendingcontenttag_sidebar" version_id="7" version_string="0.0.7"><![CDATA[<!-- block: sidebar_trending_tags -->
+    <template title="sv_trendingcontenttag_sidebar" version_id="11" version_string="0.0.11"><![CDATA[<!-- block: sidebar_trending_tags -->
 <xen:require css="tag.css" />
 <div class="section trendingTags">
 <div class="secondaryContent">
     <h3><a href="{xen:link tags}">{xen:phrase sv_trendingcontenttag_cloud}</a></h3>
     <ul class="tagCloud">
+        <xen:if is="{$tagCloud}">
             <xen:foreach loop="$tagCloud" key="$tagId" value="$tag">
                 <li>
                     <a href="{xen:link tags, $tag}"
@@ -135,6 +136,7 @@ w_watch</sub_options>
                     </a>
                 </li>
             </xen:foreach>
+        </xen:if>
     </ul>
 </div>
 </div>
