@@ -227,7 +227,7 @@ ON DUPLICATE KEY UPDATE
             INSERT INTO xf_sv_tag_trending_summary (tag_id, stats_date, activity_count)
                 SELECT tag_id, (stats_date - (stats_date % ?)), activity_count
                 FROM xf_sv_tag_trending
-                WHERE stats_date >= ? and stats_date  < ? and (stats_date - (stats_date % ?)) <> stats_date
+                WHERE stats_date >= ? and stats_date  <= ? and (stats_date - (stats_date % ?)) <> stats_date
                 {$limit}
             ON DUPLICATE KEY UPDATE
                 xf_sv_tag_trending_summary.activity_count = xf_sv_tag_trending_summary.activity_count + VALUES(xf_sv_tag_trending_summary.activity_count);
