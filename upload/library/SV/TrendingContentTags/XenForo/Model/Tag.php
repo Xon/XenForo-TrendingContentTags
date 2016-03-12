@@ -208,11 +208,12 @@ ON DUPLICATE KEY UPDATE
         }
         $summarizeTime = XenForo_Application::$time - $summarizeAfter;
         $summarizeTime = $summarizeTime - ($summarizeTime % $summarizeInterval);
+        $max = $summarizeTime;
 
         $db->query("
             TRUNCATE TABLE xf_sv_tag_trending_summary;
         ");
-        
+
         if (empty($summarizeLimit) || !is_numeric($summarizeLimit))
         {
             $summarizeLimit = 10000;
