@@ -50,6 +50,19 @@ class SV_TrendingContentTags_Installer
             ");
 */
         }
+
+        if ($version == 0 || $version < 1000000)
+        {
+            $db->query("
+                CREATE TABLE IF NOT EXISTS xf_sv_tag_trending_summary (
+                    `tag_id` int(10) unsigned NOT NULL,
+                    `stats_date` int(10) unsigned NOT NULL DEFAULT '0',
+                    `activity_count` float NOT NULL DEFAULT '0',
+                    PRIMARY KEY (`stats_date`,`tag_id`)
+                ) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
+            ");
+        }
+
         SV_Utils_Install::dropColumn("xf_tag", "sv_activity_count");
         SV_Utils_Install::modifyColumn("xf_sv_tag_trending", "activity_count", 'int(10) unsigned', 'float');
     }
@@ -60,6 +73,10 @@ class SV_TrendingContentTags_Installer
 
         $db->query("
             DROP TABLE IF EXISTS `xf_sv_tag_trending`
+        ");
+
+        $db->query("
+            DROP TABLE IF EXISTS `xf_sv_tag_trending_summary`
         ");
 
         SV_Utils_Install::dropColumn("xf_tag", "sv_activity_count");

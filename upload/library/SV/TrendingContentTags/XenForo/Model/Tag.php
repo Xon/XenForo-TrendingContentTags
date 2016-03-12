@@ -178,6 +178,108 @@ ON DUPLICATE KEY UPDATE
         return $output;
     }
 
+
+    public function summarizeOldTrendingTags()
+    {
+        $db = $this->_getDb();
+
+        $options = XenForo_Application::getOptions();
+        $summarizeAfter = $options->sv_tagTrending_summarizeAfter * 60*60;
+        $summarizeInterval = $options->sv_tagTrending_summarizeInterval * 60*60;
+        $summarizeLimit = $options->sv_tagTrending_summarizeLimit * 60*60;
+        if (empty($summarizeAfter))
+        {
+            return;
+        }
+
+        if ($this->cacheObject === null)
+        {
+            $this->cacheObject = XenForo_Application::getCache();
+        }
+        $checkpoint = 0;
+        if ($this->cacheObject)
+        {
+            $checkpoint = 0 + $this->cacheObject->load(SV_TrendingContentTags_Globals::sv_trendingTag_summarize_checkpoint_cacheId);
+        }
+
+        if ($checkpoint)
+        {
+            $checkpoint = $checkpoint - ($checkpoint % $summarizeInterval);
+        }
+        $summarizeTime = XenForo_Application::$time - $summarizeAfter;
+        $summarizeTime = $summarizeTime - ($summarizeTime % $summarizeInterval);
+
+        $db->query("
+            TRUNCATE TABLE xf_sv_tag_trending_summary;
+        ");
+        
+        if (empty($summarizeLimit) || !is_numeric($summarizeLimit))
+        {
+            $summarizeLimit = 10000;
+        }
+        $limit = "limit $summarizeLimit";
+
+        XenForo_Db::beginTransaction($db);
+
+        // build summarize list
+        $stmt = $db->query("
+            INSERT INTO xf_sv_tag_trending_summary (tag_id, stats_date, activity_count)
+                SELECT tag_id, (stats_date - (stats_date % ?)), activity_count
+                FROM xf_sv_tag_trending
+                WHERE stats_date >= ? and stats_date  < ? and (stats_date - (stats_date % ?)) <> stats_date
+                {$limit}
+            ON DUPLICATE KEY UPDATE
+                xf_sv_tag_trending_summary.activity_count = xf_sv_tag_trending_summary.activity_count + VALUES(xf_sv_tag_trending_summary.activity_count);
+        ", array($summarizeInterval, $checkpoint, $summarizeTime, $summarizeInterval));
+
+        if ($stmt->rowCount() > 0)
+        {
+            // determine how much data is to be manipulated
+            $min = $db->fetchOne("
+                SELECT MIN(stats_date)
+                FROM xf_sv_tag_trending_summary;
+            ");
+            $max = $db->fetchOne("
+                SELECT MAX(stats_date)
+                FROM xf_sv_tag_trending_summary;
+            ");
+
+            // delete non-summerized rows
+            $db->query("
+                DELETE
+                FROM xf_sv_tag_trending
+                WHERE stats_date >= ? and stats_date  <= ? and (stats_date - (stats_date % ?)) <> stats_date
+            ", array($min, $max, $summarizeInterval));
+
+            // populate trending tags table with summarized rows
+            $db->query("
+                INSERT INTO xf_sv_tag_trending (tag_id, stats_date, activity_count)
+                    SELECT tag_id, stats_date, activity_count
+                    FROM xf_sv_tag_trending_summary
+                ON DUPLICATE KEY UPDATE
+                    xf_sv_tag_trending.activity_count = xf_sv_tag_trending.activity_count + VALUES(xf_sv_tag_trending.activity_count);
+            ");
+
+            // cleanup the summary table
+            $db->query("
+                DELETE FROM xf_sv_tag_trending_summary;
+            ");
+        }
+
+        XenForo_Db::commit($db);
+
+        if ($max < $summarizeTime)
+        {
+            XenForo_Application::defer('SV_TrendingContentTags_Deferred_CleanUp', array(), null, true);
+            $summarizeTime = $max;
+        }
+
+        if ($this->cacheObject)
+        {
+            $checkpoint = $this->cacheObject->save(''.$summarizeTime, SV_TrendingContentTags_Globals::sv_trendingTag_summarize_checkpoint_cacheId, array(), 86400);
+        }
+    }
+
     public function mergeTags($sourceTagId, $targetTagId)
     {
         parent::mergeTags($sourceTagId, $targetTagId);

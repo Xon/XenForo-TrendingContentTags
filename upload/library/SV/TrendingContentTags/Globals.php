@@ -13,6 +13,7 @@ class SV_TrendingContentTags_Globals
     const ACTIVITY_TYPE_REPLY = 'reply';
     const ACTIVITY_TYPE_WATCH = 'watch';
     const sv_trendingTag_cacheId = 'tags_trending';
+    const sv_trendingTag_summarize_checkpoint_cacheId = 'tags_trending_summarize_checkpoint';
 
     private function __construct() {}
 }
