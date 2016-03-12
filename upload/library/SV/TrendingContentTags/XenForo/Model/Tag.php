@@ -211,7 +211,7 @@ ON DUPLICATE KEY UPDATE
         $max = $summarizeTime;
 
         $db->query("
-            TRUNCATE TABLE xf_sv_tag_trending_summary;
+            DELETE FROM xf_sv_tag_trending_summary
         ");
 
         if (empty($summarizeLimit) || !is_numeric($summarizeLimit))
@@ -263,7 +263,7 @@ ON DUPLICATE KEY UPDATE
 
             // cleanup the summary table
             $db->query("
-                DELETE FROM xf_sv_tag_trending_summary;
+                DELETE FROM xf_sv_tag_trending_summary
             ");
         }
 
