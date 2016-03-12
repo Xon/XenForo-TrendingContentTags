@@ -2,7 +2,6 @@
 
 class SV_TrendingContentTags_Installer
 {
-
     public static function install($existingAddOn, array $addOnData, SimpleXMLElement $xml)
     {
         if ($xml && XenForo_Application::$versionId < 1050033)

@@ -10,6 +10,7 @@ class SV_TrendingContentTags_XenForo_DataWriter_Tag extends XFCP_SV_TrendingCont
             delete into xf_sv_tag_trending where tag_id = ?
         ', $this->get('tag_id'));
     }
+
     public function delete()
     {
         parent::_delete();

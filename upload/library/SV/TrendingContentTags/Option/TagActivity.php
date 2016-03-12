@@ -59,8 +59,6 @@ class SV_TrendingContentTags_Option_TagActivity
                 $dw->error(new XenForo_Phrase('tag_activity_weight_not_numeric', array('activity' => new XenForo_Phrase('tag_activity_'.$activity)), $fieldName));
             }
         }
-//var_export($option);
-//throw new Exception();
         return $noErrors;
     }
 }
