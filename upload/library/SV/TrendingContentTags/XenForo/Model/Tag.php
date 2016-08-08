@@ -4,6 +4,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
 {
     protected $sv_tagTrending_tracking = null;
     protected $sv_tagTrending_sampleInterval = null;
+    protected $sv_tagTrending_key_expiry = null;
 
     public function incrementTagActivity($contentType, $contentId, $activity_type)
     {
@@ -12,6 +13,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
             $options = XenForo_Application::getOptions();
             $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
             $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
+            $this->sv_tagTrending_key_expiry = $this->sv_tagTrending_sampleInterval * 2;
         }
         $supported_activity_type = !empty($this->sv_tagTrending_tracking[$activity_type]);
         $w_activity_type = 'w_'.$activity_type;
@@ -19,15 +21,24 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
                           ? $this->sv_tagTrending_tracking[$w_activity_type]
                           : 1;
 
+        $tags = null;
         switch($contentType)
         {
             case 'thread':
+                if (isset(SV_TrendingContentTags_Globals::$threadTags[$contentId]))
+                {
+                    $tags = SV_TrendingContentTags_Globals::$threadTags[$contentId];
+                }
                 break;
             case 'post':
                 if (!empty(SV_TrendingContentTags_Globals::$postToThreads[$contentId]))
                 {
                     $contentType = 'thread';
                     $contentId = SV_TrendingContentTags_Globals::$postToThreads[$contentId];
+                    if (isset(SV_TrendingContentTags_Globals::$threadTags[$contentId]))
+                    {
+                        $tags = SV_TrendingContentTags_Globals::$threadTags[$contentId];
+                    }
                 }
                 else
                 {
@@ -39,12 +50,21 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
                 break;
         }
 
-        if (!$supported_activity_type)
+        if (!$supported_activity_type || empty($tags))
         {
             return false;
         }
 
         $time = XenForo_Application::$time - (XenForo_Application::$time % $this->sv_tagTrending_sampleInterval);
+        if ($this->hasRedis())
+        {
+            return $this->_incrementTagActivityRedis($contentType, $contentId, $scaling_factor, $time, $tags);
+        }
+        return $this->_incrementTagActivityDb($contentType, $contentId, $scaling_factor, $time);
+    }
+
+    protected function _incrementTagActivityDb($contentType, $contentId, $scaling_factor, $time)
+    {
         $rows = $this->_getDb()->query('
 INSERT INTO xf_sv_tag_trending (tag_id, stats_date, activity_count)
     SELECT tag_id, ?, ?
@@ -57,30 +77,150 @@ ON DUPLICATE KEY UPDATE
         return !empty($rows) && $rows->rowCount() > 0;
     }
 
+    protected $credis = null;
+    protected function hasRedis()
+    {
+        if ($this->credis !== null)
+        {
+            return ($this->credis !== false);
+        }
+        if ($this->cacheObject === null)
+        {
+            $this->cacheObject = XenForo_Application::getCache();
+        }
+        $registry = $this->_getDataRegistryModel();
+        if (!method_exists($registry, 'getCredis') || !($credis = $registry->getCredis($this->cacheObject)))
+        {
+            $this->credis = false;
+            return false;
+        }
+        $this->credis = $credis;
+        return true;
+    }
+
+    protected function _incrementTagActivityRedis($contentType, $contentId, $scaling_factor, $time, $tags)
+    {
+        if (empty($tags))
+        {
+            return false;
+        }
+        $credis = $this->credis;
+        // record keeping
+        $datakey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trending.{$time}";
+        $gckey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trendingGC";
+        foreach($tags as $tagId => $tag)
+        {
+            $credis->zIncrBy($datakey, $scaling_factor, $tagId);
+        }
+        $credis->expire($datakey, $this->sv_tagTrending_key_expiry);
+        // we need to persist the activity to fixed storage after a period of time
+        $credis->sadd($gckey, $time);
+        $credis->expire($gckey, $this->sv_tagTrending_key_expiry);
+
+        return true;
+    }
+
     protected $cacheObject = null;
 
-    public function getTrendingTagCloud($limit, $minActivity, $minCount, $sample_window, $trendingTagProbes = 5)
+    public function PersistTrendingTags($targetRunTime = null)
     {
+        if (!$this->hasRedis())
+        {
+            return;
+        }
+
+        $credis = $this->credis;
+        $options = XenForo_Application::getOptions();
+        // we need to manually expire records out of the per content hash set if they are kept alive with activity
+        $gckey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trendingGC";
+        $datakey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trending.";
+        $end = XenForo_Application::$time - (XenForo_Application::$time % $this->sv_tagTrending_sampleInterval) - 1;
+
+        $keys = array();
+        $loopGuard = 10000;
+        $s = microtime(true);
+        while($loopGuard > 0)
+        {
+            // randomly grab a key to inspect, remove it so it can't be inspected by another process
+            $timeBucket = $credis->spop($gckey);
+            if (empty($timeBucket))
+            {
+                break;
+            }
+            $fullkey = $datakey.$timeBucket;
+
+            // fetch the tags to update
+            $tags = $credis->zRangeByScore($fullkey, 0, $end, array('withscores' => true));
+            // the actual prune operation, this is not a race condition as we are dealling with only keys
+            // which are no longer being written to.
+            $credis->zRemRangeByScore($fullkey, 0, $end);
+            // don't matter about a race condition, as they will have added it back into the set
+            if ($credis->zcard($fullkey))
+            {
+                $keys[] = $timeBucket;
+            }
+
+            if (!empty($tags) && is_array($tags))
+            {
+                foreach($tags as $tagId => $score)
+                {
+                    // update each tag individually rather than in a large batch
+                    $this->_getDb()->query('
+                    INSERT INTO xf_sv_tag_trending (tag_id, stats_date, activity_count)
+                        values (?, ?, ?)
+                    ON DUPLICATE KEY UPDATE
+                        activity_count = activity_count + VALUES(activity_count)
+                    ', array($tagId, $timeBucket, $score));
+                }
+            }
+
+            $runTime = microtime(true) - $s;
+            if ($targetRunTime && $runTime > $targetRunTime)
+            {
+                break;
+            }
+            $loopGuard--;
+        }
+
+        // add the keys back in after we have finished inspecting to prevent hitting the same keys we have hit before.
+        if ($keys)
+        {
+            $credis->sadd($gckey, $keys);
+            $credis->expire($gckey, $this->sv_tagTrending_key_expiry);
+        }
+    }
+
+    public function getTrendingTagCloud($limit, $minActivity, $minCount, $sample_window, $trendingTagProbes = 1)
+    {
+        if (empty($this->sv_tagTrending_tracking))
+        {
+            $options = XenForo_Application::getOptions();
+            $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
+            $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
+            $this->sv_tagTrending_key_expiry = $this->sv_tagTrending_sampleInterval * 2;
+        }
         if ($this->cacheObject === null)
         {
             $this->cacheObject = XenForo_Application::getCache();
         }
         if ($this->cacheObject)
         {
-            if (empty($this->sv_tagTrending_tracking))
-            {
-                $options = XenForo_Application::getOptions();
-                $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
-                $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
-            }
             $expiry = $this->sv_tagTrending_sampleInterval < 120 ? 120 : intval($this->sv_tagTrending_sampleInterval);
 
             $raw = $this->cacheObject->load(SV_TrendingContentTags_Globals::sv_trendingTag_cacheId, true);
-            $trendingTags = @unserialize($raw);
-            if (!empty($trendingTags))
+            if ($raw !== false)
             {
-                return $trendingTags;
+                $trendingTags = @unserialize($raw);
+                if (!empty($trendingTags))
+                {
+                    return $trendingTags;
+                }
             }
+        }
+
+        if ($this->hasRedis())
+        {
+            $this->PersistTrendingTags();
         }
 
         $limitstring = '';
@@ -130,7 +270,7 @@ ON DUPLICATE KEY UPDATE
         if ($this->cacheObject && !empty($expiry))
         {
             $raw = serialize($trendingTags);
-            $this->cacheObject->save($raw, SV_TrendingContentTags_Globals::sv_trendingTag_cacheId, array(), $expiry);
+            $this->cacheObject->save($raw, SV_TrendingContentTags_Globals::sv_trendingTag_cacheId, array(), $this->sv_tagTrending_key_expiry);
         }
 
         return $trendingTags;
@@ -182,6 +322,22 @@ ON DUPLICATE KEY UPDATE
     public function summarizeOldTrendingTags()
     {
         $db = $this->_getDb();
+
+        if (empty($this->sv_tagTrending_tracking))
+        {
+            $options = XenForo_Application::getOptions();
+            $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
+            $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
+            $this->sv_tagTrending_key_expiry = $this->sv_tagTrending_sampleInterval * 2;
+        }
+        if ($this->cacheObject === null)
+        {
+            $this->cacheObject = XenForo_Application::getCache();
+        }
+        if ($this->hasRedis())
+        {
+            $this->PersistTrendingTags();
+        }
 
         $options = XenForo_Application::getOptions();
         $summarizeAfter = $options->sv_tagTrending_summarizeAfter * 60*60;

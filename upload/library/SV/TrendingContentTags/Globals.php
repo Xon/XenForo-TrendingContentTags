@@ -6,6 +6,7 @@ class SV_TrendingContentTags_Globals
 {
     public static $LoggedTagActivity = false;
     public static $postToThreads = array();
+    public static $threadTags = array();
 
     const ACTIVITY_TYPE_LIKE = 'like';
     const ACTIVITY_TYPE_VIEW_GUEST = 'view_guest';
