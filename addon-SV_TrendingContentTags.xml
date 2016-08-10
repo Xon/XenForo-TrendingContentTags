@@ -71,7 +71,7 @@ count</sub_options>
       <sub_options></sub_options>
       <relation group_id="tagging" display_order="100340"/>
     </option>
-    <option option_id="sv_tagTrending_sampleInterval" edit_format="spinbox" data_type="positive_integer" can_backup="1">
+    <option option_id="sv_tagTrending_sampleInterval" edit_format="spinbox" data_type="positive_integer" can_backup="1" validation_class="SV_TrendingContentTags_Option_SampleInterval" validation_method="verifyOption">
       <default_value>30</default_value>
       <edit_format_params></edit_format_params>
       <sub_options></sub_options>

@@ -12,7 +12,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
         $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
         // cron-task runs every ~5 minutes, ensure the samples will last long enough even if a instance is missed
-        $this->sv_tagTrending_key_expiry = min($this->sv_tagTrending_sampleInterval, 11);
+        $this->sv_tagTrending_key_expiry = min($this->sv_tagTrending_sampleInterval, 11 * 60);
     }
 
     public function incrementTagActivity($contentType, $contentId, $activity_type)
@@ -111,16 +111,16 @@ ON DUPLICATE KEY UPDATE
             return false;
         }
         $credis = $this->credis;
-        // record keeping
+        // increment tag counters
         $datakey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trending.{$time}";
         $gckey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trendingGC";
         foreach($tags as $tagId => $tag)
         {
-            $credis->zIncrBy($datakey, $scaling_factor, $tagId);
+            $credis->hIncrByFloat($datakey, $tagId, $scaling_factor);
         }
         $credis->expire($datakey, $this->sv_tagTrending_key_expiry);
         // we need to persist the activity to fixed storage after a period of time
-        $credis->sadd($gckey, $time);
+        $credis->zadd($gckey, $time, $time);
         $credis->expire($gckey, $this->sv_tagTrending_key_expiry);
 
         return true;
@@ -140,62 +140,54 @@ ON DUPLICATE KEY UPDATE
         }
 
         $credis = $this->credis;
-        // we need to manually expire records out of the per content hash set if they are kept alive with activity
         $gckey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trendingGC";
         $datakey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trending.";
         $end = XenForo_Application::$time - (XenForo_Application::$time % $this->sv_tagTrending_sampleInterval) - 1;
 
         $keys = array();
-        $loopGuard = 10000;
-        $s = microtime(true);
-        while($loopGuard > 0)
+        // get expired buckets
+        $timeBuckets = $credis->zRangeByScore($gckey, 0, $end, array('withscores' => true));
+        if (!empty($timeBuckets) && is_array($timeBuckets))
         {
-            // randomly grab a key to inspect, remove it so it can't be inspected by another process
-            $timeBucket = $credis->spop($gckey);
-            if (empty($timeBucket))
+            //$credis->zRemRangeByScore($gckey, 0, $end);
+            // if there are any buckets left, bump the GC's expiry date
+            if ($credis->zcard($gckey))
             {
-                break;
+                $credis->expire($gckey, $this->sv_tagTrending_key_expiry);
             }
-            $fullkey = $datakey.$timeBucket;
-
-            // fetch the tags to update
-            $tags = $credis->zRangeByScore($fullkey, 0, $end, array('withscores' => true));
-            // the actual prune operation, this is not a race condition as we are dealling with only keys
-            // which are no longer being written to.
-            $credis->zRemRangeByScore($fullkey, 0, $end);
-            // don't matter about a race condition, as they will have added it back into the set
-            if ($credis->zcard($fullkey))
+            // persist the buckets which have been removed by the GC
+            foreach($timeBuckets as $timeBucket => $_)
             {
-                $keys[] = $timeBucket;
-            }
-
-            if (!empty($tags) && is_array($tags))
-            {
-                foreach($tags as $tagId => $score)
+                $fullkey = $datakey.$timeBucket;
+                // prevent looping forever
+                $loopGuard = 100000;
+                // find indexes matching the pattern
+                $cursor = null;
+                do
                 {
-                    // update each tag individually rather than in a large batch
-                    $this->_getDb()->query('
-                    INSERT INTO xf_sv_tag_trending (tag_id, stats_date, activity_count)
-                        values (?, ?, ?)
-                    ON DUPLICATE KEY UPDATE
-                        activity_count = activity_count + VALUES(activity_count)
-                    ', array($tagId, $timeBucket, $score));
+                    $tags = $credis->hScan($cursor, $fullkey);
+                    $loopGuard--;
+                    if ($tags === false)
+                    {
+                        break;
+                    }
+
+                    if (is_array($tags))
+                    {
+                        foreach($tags as $tagId => $score)
+                        {
+                            // update each tag individually rather than in a large batch
+                            $this->_getDb()->query('
+                            INSERT INTO xf_sv_tag_trending (tag_id, stats_date, activity_count)
+                                values (?, ?, ?)
+                            ON DUPLICATE KEY UPDATE
+                                activity_count = activity_count + VALUES(activity_count)
+                            ', array($tagId, $timeBucket, $score));
+                        }
+                    }
                 }
+                while($loopGuard > 0 && !empty($cursor));
             }
-
-            $runTime = microtime(true) - $s;
-            if ($targetRunTime && $runTime > $targetRunTime)
-            {
-                break;
-            }
-            $loopGuard--;
-        }
-
-        // add the keys back in after we have finished inspecting to prevent hitting the same keys we have hit before.
-        if ($keys)
-        {
-            $credis->sadd($gckey, $keys);
-            $credis->expire($gckey, $this->sv_tagTrending_key_expiry);
         }
     }
 
