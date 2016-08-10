@@ -6,14 +6,20 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
     protected $sv_tagTrending_sampleInterval = null;
     protected $sv_tagTrending_key_expiry = null;
 
+    protected function _setupState()
+    {
+        $options = XenForo_Application::getOptions();
+        $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
+        $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
+        // cron-task runs every ~5 minutes, ensure the samples will last long enough even if a instance is missed
+        $this->sv_tagTrending_key_expiry = min($this->sv_tagTrending_sampleInterval, 11);
+    }
+
     public function incrementTagActivity($contentType, $contentId, $activity_type)
     {
         if (empty($this->sv_tagTrending_tracking))
         {
-            $options = XenForo_Application::getOptions();
-            $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
-            $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
-            $this->sv_tagTrending_key_expiry = $this->sv_tagTrending_sampleInterval * 2;
+            $this->_setupState();
         }
         $supported_activity_type = !empty($this->sv_tagTrending_tracking[$activity_type]);
         $w_activity_type = 'w_'.$activity_type;
@@ -128,9 +134,12 @@ ON DUPLICATE KEY UPDATE
         {
             return;
         }
+        if (empty($this->sv_tagTrending_tracking))
+        {
+            $this->_setupState();
+        }
 
         $credis = $this->credis;
-        $options = XenForo_Application::getOptions();
         // we need to manually expire records out of the per content hash set if they are kept alive with activity
         $gckey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trendingGC";
         $datakey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trending.";
@@ -194,10 +203,7 @@ ON DUPLICATE KEY UPDATE
     {
         if (empty($this->sv_tagTrending_tracking))
         {
-            $options = XenForo_Application::getOptions();
-            $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
-            $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
-            $this->sv_tagTrending_key_expiry = $this->sv_tagTrending_sampleInterval * 2;
+            $this->_setupState();
         }
         if ($this->cacheObject === null)
         {
@@ -325,10 +331,7 @@ ON DUPLICATE KEY UPDATE
 
         if (empty($this->sv_tagTrending_tracking))
         {
-            $options = XenForo_Application::getOptions();
-            $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
-            $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
-            $this->sv_tagTrending_key_expiry = $this->sv_tagTrending_sampleInterval * 2;
+            $this->_setupState();
         }
         if ($this->cacheObject === null)
         {

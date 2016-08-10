@@ -37,6 +37,7 @@
   </code_event_listeners>
   <cron>
     <entry entry_id="tct_CleanUp" cron_class="SV_TrendingContentTags_CronEntry_CleanUp" cron_method="runOldTagsCleanUp" active="1"><![CDATA[{"day_type":"dom","dom":["-1"],"hours":["2"],"minutes":["0"]}]]></entry>
+    <entry entry_id="tct_persistance" cron_class="SV_TrendingContentTags_CronEntry_CleanUp" cron_method="persistTrendingTags" active="1"><![CDATA[{"day_type":"dom","dom":["-1"],"hours":["-1"],"minutes":["0","5","10","15","20","25","30","35","40","45","50","55"]}]]></entry>
   </cron>
   <email_templates/>
   <email_template_modifications/>
@@ -117,6 +118,7 @@ w_watch</sub_options>
   </permissions>
   <phrases>
     <phrase title="cron_entry_tct_CleanUp" version_id="1000012" version_string="1.0.0"><![CDATA[Trending Content Tags Daily Clean Up]]></phrase>
+    <phrase title="cron_entry_tct_persistance" version_id="1010000" version_string="1.1.0"><![CDATA[Trending Content Tags Persistance]]></phrase>
     <phrase title="option_sv_tagTrending" version_id="1000000" version_string="1.0.0"><![CDATA[Enable tag trending with up to X tags:]]></phrase>
     <phrase title="option_sv_tagTrendingMinActivity" version_id="1000000" version_string="1.0.0"><![CDATA[Minimum Trending Tag Cloud Activity]]></phrase>
     <phrase title="option_sv_tagTrendingMinActivity_explain" version_id="1000000" version_string="1.0.0"><![CDATA[Tags will not be shown in the trending tag cloud unless they have been this active in the trending window.]]></phrase>
