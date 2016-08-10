@@ -112,8 +112,8 @@ ON DUPLICATE KEY UPDATE
         }
         $credis = $this->credis;
         // increment tag counters
-        $datakey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trending.{$time}";
-        $gckey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trendingGC";
+        $datakey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "tags_trending.{$time}";
+        $gckey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "tags_trendingGC";
         foreach($tags as $tagId => $tag)
         {
             $credis->hIncrByFloat($datakey, $tagId, $scaling_factor);
@@ -128,7 +128,7 @@ ON DUPLICATE KEY UPDATE
 
     protected $cacheObject = null;
 
-    public function PersistTrendingTags($targetRunTime = null)
+    public function PersistTrendingTags($includeCurrent = false)
     {
         if (!$this->hasRedis())
         {
@@ -140,9 +140,17 @@ ON DUPLICATE KEY UPDATE
         }
 
         $credis = $this->credis;
-        $gckey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trendingGC";
-        $datakey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "trending.";
-        $end = XenForo_Application::$time - (XenForo_Application::$time % $this->sv_tagTrending_sampleInterval) - 1;
+        $gckey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "tags_trendingGC";
+        $datakey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "tags_trending.";
+        $renameKey = Cm_Cache_Backend_Redis::PREFIX_KEY. $this->cacheObject->getOption('cache_id_prefix') . "tags_trendingFrozen.";
+        if ($includeCurrent)
+        {
+            $end = XenForo_Application::$time + 86400;
+        }
+        else
+        {
+            $end = XenForo_Application::$time - (XenForo_Application::$time % $this->sv_tagTrending_sampleInterval) - 1;
+        }
 
         $keys = array();
         // get expired buckets
@@ -158,7 +166,9 @@ ON DUPLICATE KEY UPDATE
             // persist the buckets which have been removed by the GC
             foreach($timeBuckets as $timeBucket => $_)
             {
-                $fullkey = $datakey.$timeBucket;
+                $oldkey = $datakey.$timeBucket;
+                $fullkey = $renameKey.$timeBucket;
+                $credis->rename($oldkey, $fullkey);
                 // prevent looping forever
                 $loopGuard = 100000;
                 // find indexes matching the pattern
@@ -187,6 +197,8 @@ ON DUPLICATE KEY UPDATE
                     }
                 }
                 while($loopGuard > 0 && !empty($cursor));
+                // explicitly delete the key we are working on so it doesn't get re-used
+                $credis->del($fullkey);
             }
         }
     }
@@ -218,7 +230,7 @@ ON DUPLICATE KEY UPDATE
 
         if ($this->hasRedis())
         {
-            $this->PersistTrendingTags();
+            $this->PersistTrendingTags(true);
         }
 
         $limitstring = '';
