@@ -149,7 +149,7 @@ ON DUPLICATE KEY UPDATE
         $timeBuckets = $credis->zRangeByScore($gckey, 0, $end, array('withscores' => true));
         if (!empty($timeBuckets) && is_array($timeBuckets))
         {
-            //$credis->zRemRangeByScore($gckey, 0, $end);
+            $credis->zRemRangeByScore($gckey, 0, $end);
             // if there are any buckets left, bump the GC's expiry date
             if ($credis->zcard($gckey))
             {
@@ -174,7 +174,7 @@ ON DUPLICATE KEY UPDATE
 
                     if (is_array($tags))
                     {
-                        foreach($tags as $tagId => $score)
+                        foreach($tags as $tagId => $activityCount)
                         {
                             // update each tag individually rather than in a large batch
                             $this->_getDb()->query('
@@ -182,7 +182,7 @@ ON DUPLICATE KEY UPDATE
                                 values (?, ?, ?)
                             ON DUPLICATE KEY UPDATE
                                 activity_count = activity_count + VALUES(activity_count)
-                            ', array($tagId, $timeBucket, $score));
+                            ', array($tagId, $timeBucket, $activityCount));
                         }
                     }
                 }
