@@ -12,7 +12,7 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         $this->sv_tagTrending_tracking = $options->sv_tagTrending_tracking;
         $this->sv_tagTrending_sampleInterval = $options->sv_tagTrending_sampleInterval * 60;
         // cron-task runs every ~5 minutes, ensure the samples will last long enough even if a instance is missed
-        $this->sv_tagTrending_key_expiry = min($this->sv_tagTrending_sampleInterval, 11 * 60);
+        $this->sv_tagTrending_key_expiry = $this->sv_tagTrending_sampleInterval + 11 * 60;
     }
 
     public function incrementTagActivity($contentType, $contentId, $activity_type)
