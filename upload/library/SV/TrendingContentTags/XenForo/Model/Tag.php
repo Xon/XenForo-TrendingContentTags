@@ -66,19 +66,31 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         {
             return $this->_incrementTagActivityRedis($contentType, $contentId, $scaling_factor, $time, $tags);
         }
-        return $this->_incrementTagActivityDb($contentType, $contentId, $scaling_factor, $time);
+        return $this->_incrementTagActivityDb($contentType, $contentId, $scaling_factor, $time, $tags));
     }
 
-    protected function _incrementTagActivityDb($contentType, $contentId, $scaling_factor, $time)
+    protected function _incrementTagActivityDb($contentType, $contentId, $scaling_factor, $time, $tags))
     {
+        $args = array();
+        $sqlArgs = array();
+        foreach($tags as $tagId => $tag)
+        {
+            $args[] = array($tagId, $time, $scaling_factor);
+            $foreach[] = '(?,?,?)';
+        }
+        if (empty($args))
+        {
+            return false;
+        }
+
+        $values = implode(',', $foreach);
+
         $rows = $this->_getDb()->query('
-INSERT INTO xf_sv_tag_trending (tag_id, stats_date, activity_count)
-    SELECT tag_id, ?, ?
-    FROM xf_tag_content AS tag_content
-    WHERE tag_content.content_type = ? AND tag_content.content_id = ?
+INSERT INTO xf_sv_tag_trending (tag_id, stats_date, activity_count) values
+'.$values.'
 ON DUPLICATE KEY UPDATE
     activity_count = activity_count + VALUES(activity_count)
-        ', array($time, $scaling_factor, $contentType, $contentId));
+        ', $args);
 
         return !empty($rows) && $rows->rowCount() > 0;
     }
