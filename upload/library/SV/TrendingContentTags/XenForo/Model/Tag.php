@@ -180,7 +180,19 @@ ON DUPLICATE KEY UPDATE
             {
                 $oldkey = $datakey.$timeBucket;
                 $fullkey = $renameKey.$timeBucket;
-                $credis->rename($oldkey, $fullkey);
+                try
+                {
+                    $credis->rename($oldkey, $fullkey);
+                }
+                catch(CredisException $e)
+                {
+                    if ($e->getMessage() == "ERR no such key")
+                    {
+                        // key doesn't exist
+                        continue;
+                    }
+                    throw $e;
+                }
                 // prevent looping forever
                 $loopGuard = 100000;
                 // find indexes matching the pattern
