@@ -66,25 +66,26 @@ class SV_TrendingContentTags_XenForo_Model_Tag extends XFCP_SV_TrendingContentTa
         {
             return $this->_incrementTagActivityRedis($contentType, $contentId, $scaling_factor, $time, $tags);
         }
-        return $this->_incrementTagActivityDb($contentType, $contentId, $scaling_factor, $time, $tags));
+        return $this->_incrementTagActivityDb($contentType, $contentId, $scaling_factor, $time, $tags);
     }
 
-    protected function _incrementTagActivityDb($contentType, $contentId, $scaling_factor, $time, $tags))
+    protected function _incrementTagActivityDb($contentType, $contentId, $scaling_factor, $time, $tags)
     {
         $args = array();
         $sqlArgs = array();
         foreach($tags as $tagId => $tag)
         {
-            $args[] = array($tagId, $time, $scaling_factor);
-            $foreach[] = '(?,?,?)';
+            $args[] = $tagId;
+            $args[] = $time;
+            $args[] = $scaling_factor;
+            $sqlArgs[] = '(?,?,?)';
         }
         if (empty($args))
         {
             return false;
         }
 
-        $values = implode(',', $foreach);
-
+        $values = implode(',', $sqlArgs);
         $rows = $this->_getDb()->query('
 INSERT INTO xf_sv_tag_trending (tag_id, stats_date, activity_count) values
 '.$values.'
