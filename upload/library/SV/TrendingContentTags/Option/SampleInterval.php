@@ -6,7 +6,7 @@ class SV_TrendingContentTags_Option_SampleInterval
     {
         $tagModel = XenForo_Model::create('XenForo_Model_Tag');
         // on initial install, our extensions to the XenForo_Model_Tag may not have been implemented
-        if (is_callable(array($tagModel, 'PersistTrendingTags'))
+        if (is_callable(array($tagModel, 'PersistTrendingTags')))
         {
             $tagModel->PersistTrendingTags(true);
         }
