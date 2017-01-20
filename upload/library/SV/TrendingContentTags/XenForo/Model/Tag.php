@@ -375,14 +375,11 @@ ON DUPLICATE KEY UPDATE
         $summarizeAfter = $options->sv_tagTrending_summarizeAfter * 60*60;
         $summarizeInterval = $options->sv_tagTrending_summarizeInterval * 60*60;
         $summarizeLimit = intval($options->sv_tagTrending_summarizeLimit);
-        if (empty($summarizeAfter))
+        if (empty($summarizeAfter) || empty($summarizeLimit))
         {
             return;
         }
-        if (empty($summarizeLimit))
-        {
-            $summarizeLimit = 10000;
-        }
+        $limit = ($summarizeLimit > 0) ? "limit $summarizeLimit" : ""
 
         if ($this->cacheObject === null)
         {
@@ -405,11 +402,6 @@ ON DUPLICATE KEY UPDATE
         $db->query("
             DELETE FROM xf_sv_tag_trending_summary
         ");
-
-        if ($summarizeLimit)
-        {
-            $limit = "limit $summarizeLimit";
-        }
 
         XenForo_Db::beginTransaction($db);
 
