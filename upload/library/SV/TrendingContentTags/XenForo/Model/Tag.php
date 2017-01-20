@@ -374,7 +374,7 @@ ON DUPLICATE KEY UPDATE
         $options = XenForo_Application::getOptions();
         $summarizeAfter = $options->sv_tagTrending_summarizeAfter * 60*60;
         $summarizeInterval = $options->sv_tagTrending_summarizeInterval * 60*60;
-        $summarizeLimit = $options->sv_tagTrending_summarizeLimit * 60*60;
+        $summarizeLimit = $options->sv_tagTrending_summarizeLimit;
         if (empty($summarizeAfter))
         {
             return;
@@ -459,7 +459,7 @@ ON DUPLICATE KEY UPDATE
 
         if ($max < $summarizeTime)
         {
-            XenForo_Application::defer('SV_TrendingContentTags_Deferred_CleanUp', array(), null, true);
+            XenForo_Application::defer('SV_TrendingContentTags_Deferred_CleanUp', array());
             $summarizeTime = $max;
         }
 

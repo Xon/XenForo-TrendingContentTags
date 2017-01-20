@@ -1,6 +1,6 @@
 <?php
 
-class SV_TrendingContentTags_Deferred_CleanUp
+class SV_TrendingContentTags_Deferred_CleanUp extends XenForo_Deferred_Abstract
 {
     public function execute(array $deferred, array $data, $targetRunTime, &$status)
     {

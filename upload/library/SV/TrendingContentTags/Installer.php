@@ -66,7 +66,7 @@ class SV_TrendingContentTags_Installer
         SV_Utils_Install::dropColumn("xf_tag", "sv_activity_count");
         SV_Utils_Install::modifyColumn("xf_sv_tag_trending", "activity_count", 'int(10) unsigned', 'float');
 
-        XenForo_Application::defer('SV_TrendingContentTags_Deferred_CleanUp', array(), null, true);
+        XenForo_Application::defer('SV_TrendingContentTags_Deferred_CleanUp', array());
     }
 
     public static function uninstall()
