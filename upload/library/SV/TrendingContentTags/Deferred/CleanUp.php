@@ -15,7 +15,7 @@ class SV_TrendingContentTags_Deferred_CleanUp extends XenForo_Deferred_Abstract
         $tagModel = XenForo_Model::create('XenForo_Model_Tag');
         if (method_exists($tagModel, 'summarizeOldTrendingTags'))
         {
-            $tagModel->summarizeOldTrendingTags(empty($data['persist_current']) ? 0 : $data['persist_current']);
+            $tagModel->summarizeOldTrendingTags();
         }
         return false;
     }
