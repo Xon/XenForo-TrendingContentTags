@@ -374,10 +374,14 @@ ON DUPLICATE KEY UPDATE
         $options = XenForo_Application::getOptions();
         $summarizeAfter = $options->sv_tagTrending_summarizeAfter * 60*60;
         $summarizeInterval = $options->sv_tagTrending_summarizeInterval * 60*60;
-        $summarizeLimit = $options->sv_tagTrending_summarizeLimit;
+        $summarizeLimit = intval($options->sv_tagTrending_summarizeLimit);
         if (empty($summarizeAfter))
         {
             return;
+        }
+        if (empty($summarizeLimit))
+        {
+            $summarizeLimit = 10000;
         }
 
         if ($this->cacheObject === null)
@@ -387,7 +391,7 @@ ON DUPLICATE KEY UPDATE
 
         if (!$checkpoint && $this->cacheObject)
         {
-            $checkpoint = 0 + $this->cacheObject->load(SV_TrendingContentTags_Globals::sv_trendingTag_summarize_checkpoint_cacheId);
+            $checkpoint = intval($this->cacheObject->load(SV_TrendingContentTags_Globals::sv_trendingTag_summarize_checkpoint_cacheId));
         }
 
         if ($checkpoint)
@@ -402,11 +406,10 @@ ON DUPLICATE KEY UPDATE
             DELETE FROM xf_sv_tag_trending_summary
         ");
 
-        if (empty($summarizeLimit) || !is_numeric($summarizeLimit))
+        if ($summarizeLimit)
         {
-            $summarizeLimit = 10000;
+            $limit = "limit $summarizeLimit";
         }
-        $limit = "limit $summarizeLimit";
 
         XenForo_Db::beginTransaction($db);
 
@@ -466,7 +469,7 @@ ON DUPLICATE KEY UPDATE
 
         if ($this->cacheObject)
         {
-            $this->cacheObject->save(''.$summarizeTime, SV_TrendingContentTags_Globals::sv_trendingTag_summarize_checkpoint_cacheId, array(), 2 * 86400);
+            $this->cacheObject->save(''.$summarizeTime, SV_TrendingContentTags_Globals::sv_trendingTag_summarize_checkpoint_cacheId, array(), 7 * 86400);
         }
 
         if ($defer)
