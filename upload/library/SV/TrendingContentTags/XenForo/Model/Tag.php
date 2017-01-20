@@ -372,14 +372,14 @@ ON DUPLICATE KEY UPDATE
         }
 
         $options = XenForo_Application::getOptions();
-        $summarizeAfter = $options->sv_tagTrending_summarizeAfter * 60*60;
-        $summarizeInterval = $options->sv_tagTrending_summarizeInterval * 60*60;
+        $summarizeAfter = intval($options->sv_tagTrending_summarizeAfter) * 60*60;
+        $summarizeInterval = intval($options->sv_tagTrending_summarizeInterval) * 60*60;
         $summarizeLimit = intval($options->sv_tagTrending_summarizeLimit);
         if (empty($summarizeAfter) || empty($summarizeLimit))
         {
             return;
         }
-        $limit = ($summarizeLimit > 0) ? "limit $summarizeLimit" : ""
+        $limit = ($summarizeLimit > 0) ? "limit $summarizeLimit" : "";
 
         if ($this->cacheObject === null)
         {
@@ -415,7 +415,7 @@ ON DUPLICATE KEY UPDATE
             ON DUPLICATE KEY UPDATE
                 xf_sv_tag_trending_summary.activity_count = xf_sv_tag_trending_summary.activity_count + VALUES(xf_sv_tag_trending_summary.activity_count);
         ", array($summarizeInterval, $checkpoint, $summarizeTime, $summarizeInterval));
-
+        $rowsPruned = 0;
         if ($stmt->rowCount() > 0)
         {
             // determine how much data is to be manipulated
@@ -426,14 +426,14 @@ ON DUPLICATE KEY UPDATE
             $max = $db->fetchOne("
                 SELECT MAX(stats_date)
                 FROM xf_sv_tag_trending_summary;
-            ");
+            ") + $summarizeInterval;
 
             // delete non-summerized rows
-            $db->query("
+            $rowsPruned = $db->query("
                 DELETE
                 FROM xf_sv_tag_trending
                 WHERE stats_date >= ? and stats_date  <= ? and (stats_date - (stats_date % ?)) <> stats_date
-            ", array($min, $max, $summarizeInterval));
+            ", array($min, $max, $summarizeInterval))->rowCount();
 
             // populate trending tags table with summarized rows
             $db->query("
@@ -453,7 +453,7 @@ ON DUPLICATE KEY UPDATE
         XenForo_Db::commit($db);
 
         $defer = false;
-        if ($max < $summarizeTime)
+        if ($max < $summarizeTime && $rowsPruned > 0)
         {
             $summarizeTime = $max;
             $defer = true;
