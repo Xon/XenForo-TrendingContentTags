@@ -90,7 +90,7 @@ count</sub_options>
       <relation group_id="tagging" display_order="100420"/>
     </option>
     <option option_id="sv_tagTrending_summarizeLimit" edit_format="spinbox" data_type="unsigned_integer" can_backup="1">
-      <default_value>10000</default_value>
+      <default_value>100</default_value>
       <edit_format_params></edit_format_params>
       <sub_options></sub_options>
       <relation group_id="tagging" display_order="100430"/>
