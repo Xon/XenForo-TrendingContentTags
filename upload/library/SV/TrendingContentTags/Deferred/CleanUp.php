@@ -4,15 +4,18 @@ class SV_TrendingContentTags_Deferred_CleanUp extends XenForo_Deferred_Abstract
 {
     public function execute(array $deferred, array $data, $targetRunTime, &$status)
     {
-        $tagModel = XenForo_Model::create('XenForo_Model_Tag');
-        if (method_exists($tagModel, 'PersistTrendingTags'))
+        if (!empty($data['persist']))
         {
-            $tagModel->PersistTrendingTags(true);
+            $tagModel = XenForo_Model::create('XenForo_Model_Tag');
+            if (method_exists($tagModel, 'PersistTrendingTags'))
+            {
+                $tagModel->PersistTrendingTags(!empty($data['persist_current']));
+            }
         }
         $tagModel = XenForo_Model::create('XenForo_Model_Tag');
         if (method_exists($tagModel, 'summarizeOldTrendingTags'))
         {
-            $tagModel->summarizeOldTrendingTags();
+            $tagModel->summarizeOldTrendingTags(empty($data['persist_current']) ? 0 : $data['persist_current']);
         }
         return false;
     }

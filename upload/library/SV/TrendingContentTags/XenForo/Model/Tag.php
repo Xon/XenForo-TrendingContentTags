@@ -354,7 +354,7 @@ ON DUPLICATE KEY UPDATE
     }
 
 
-    public function summarizeOldTrendingTags()
+    public function summarizeOldTrendingTags($checkpoint = 0)
     {
         $db = $this->_getDb();
 
@@ -384,8 +384,8 @@ ON DUPLICATE KEY UPDATE
         {
             $this->cacheObject = XenForo_Application::getCache();
         }
-        $checkpoint = 0;
-        if ($this->cacheObject)
+
+        if (!$checkpoint && $this->cacheObject)
         {
             $checkpoint = 0 + $this->cacheObject->load(SV_TrendingContentTags_Globals::sv_trendingTag_summarize_checkpoint_cacheId);
         }
@@ -457,15 +457,21 @@ ON DUPLICATE KEY UPDATE
 
         XenForo_Db::commit($db);
 
+        $defer = false;
         if ($max < $summarizeTime)
         {
-            XenForo_Application::defer('SV_TrendingContentTags_Deferred_CleanUp', array());
             $summarizeTime = $max;
+            $defer = true;
         }
 
         if ($this->cacheObject)
         {
-            $checkpoint = $this->cacheObject->save(''.$summarizeTime, SV_TrendingContentTags_Globals::sv_trendingTag_summarize_checkpoint_cacheId, array(), 86400);
+            $this->cacheObject->save(''.$summarizeTime, SV_TrendingContentTags_Globals::sv_trendingTag_summarize_checkpoint_cacheId, array(), 2 * 86400);
+        }
+
+        if ($defer)
+        {
+            XenForo_Application::defer('SV_TrendingContentTags_Deferred_CleanUp', array('checkpoint' => $max));
         }
     }
 
