@@ -13,7 +13,7 @@ class SV_TrendingContentTags_Installer
 
         $db = XenForo_Application::getDb();
 
-        if ($version == 0)
+        if (!$db->fetchRow("SHOW TABLES LIKE 'xf_sv_tag_trending'"))
         {
             $db->query("
                 CREATE TABLE IF NOT EXISTS xf_sv_tag_trending (
@@ -23,6 +23,7 @@ class SV_TrendingContentTags_Installer
                     PRIMARY KEY (`stats_date`,`tag_id`)
                 ) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
             ");
+        }
 
 /*
             $db->query("
@@ -49,9 +50,8 @@ class SV_TrendingContentTags_Installer
                     activity_count = activity_count + values(activity_count)
             ");
 */
-        }
 
-        if ($version == 0 || $version < 1000000)
+        if (!$db->fetchRow("SHOW TABLES LIKE 'xf_sv_tag_trending_summary'"))
         {
             $db->query("
                 CREATE TABLE IF NOT EXISTS xf_sv_tag_trending_summary (
