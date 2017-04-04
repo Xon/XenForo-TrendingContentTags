@@ -13,7 +13,7 @@ class SV_TrendingContentTags_XenForo_DataWriter_Tag extends XFCP_SV_TrendingCont
 
     public function delete()
     {
-        parent::_delete();
+        parent::delete();
 
         if ($cacheObject = XenForo_Application::getCache())
         {
