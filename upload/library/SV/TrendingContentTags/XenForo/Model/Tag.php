@@ -181,18 +181,26 @@ ON DUPLICATE KEY UPDATE
             {
                 $oldkey = $datakey.$timeBucket;
                 $fullkey = $renameKey.$timeBucket;
+                $skip = false;
                 try
                 {
                     $credis->rename($oldkey, $fullkey);
                 }
                 catch(CredisException $e)
                 {
-                    if ($e->getMessage() == "ERR no such key")
+                    if (stripos($e->getMessage(), "no such key") !== false)
                     {
                         // key doesn't exist
-                        continue;
+                        $skip = true;
                     }
-                    throw $e;
+                    else
+                    {
+                        throw $e;
+                    }
+                }
+                if ($skip)
+                {
+                    continue;
                 }
                 // prevent looping forever
                 $loopGuard = 100000;
